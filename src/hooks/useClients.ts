@@ -44,6 +44,9 @@ export function useCreateClient() {
 
   return useMutation({
     mutationFn: async (values: ClientValues) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No hay sesión de usuario activa');
+
       const { data, error } = await supabase
         .from('clients')
         .insert([{
@@ -52,6 +55,7 @@ export function useCreateClient() {
           phone: values.phone || null,
           email: values.email || null,
           address: values.address || null,
+          user_id: user.id, // <--- Esto es vital
         }])
         .select()
         .single();
@@ -59,6 +63,7 @@ export function useCreateClient() {
       if (error) throw error;
       return data;
     },
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
     },
