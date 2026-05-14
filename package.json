@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "jest --watchAll=false",
+    "test:watch": "jest --watchAll"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -23,6 +25,9 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.18.5",
     "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
@@ -32,9 +37,12 @@
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.6",
     "eslint-config-prettier": "^10.1.8",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
     "postcss": "^8.5.6",
     "prettier": "^3.8.3",
     "tailwindcss": "^3.4.17",
+    "ts-jest": "^29.4.9",
     "typescript": "^5.9.2"
   }
 }
