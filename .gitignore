@@ -23,6 +23,6 @@ Thumbs.db
 # typescript
 *.tsbuildinfo
 
-# documento maestro local de trabajo 
+# documentos locales
 PROYECTO_PRESTAMOS_CONTEXTO_COMPLETO.md
-AGENTS.md
+AGENTS.md
