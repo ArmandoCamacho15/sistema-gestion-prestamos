@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 export async function login(values: LoginValues) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const validatedFields = loginSchema.safeParse(values);
 
@@ -30,7 +30,7 @@ export async function login(values: LoginValues) {
 }
 
 export async function register(values: RegisterValues) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const validatedFields = registerSchema.safeParse(values);
 
@@ -51,8 +51,10 @@ export async function register(values: RegisterValues) {
   });
 
   if (error) {
-    return { error: 'No se pudo crear la cuenta. Inténtalo de nuevo.' };
+    console.error('Error en signUp:', error);
+    return { error: `No se pudo crear la cuenta: ${error.message}` };
   }
+
 
   if (data.user) {
     // Insertar configuraciones por defecto para el nuevo usuario
@@ -76,7 +78,7 @@ export async function register(values: RegisterValues) {
 }
 
 export async function logout() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
   revalidatePath('/', 'layout');
   redirect('/login');

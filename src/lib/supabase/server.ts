@@ -28,9 +28,9 @@ function getSupabaseConfig() {
   return { supabaseUrl, supabaseAnonKey };
 }
 
-export function createSupabaseServerClient() {
+export async function createSupabaseServerClient() {
   const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();
-  const cookieStore = cookies() as unknown as MutableCookieStore;
+  const cookieStore = await cookies();
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -38,10 +38,15 @@ export function createSupabaseServerClient() {
         return cookieStore.getAll();
       },
       setAll(cookiesToSet: SupabaseCookieToSet[]) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          cookieStore.set(name, value, options);
-        });
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch (error) {
+          // El método setAll puede ser llamado desde Server Components
+          // donde las cookies no pueden ser modificadas. Ignoramos si falla.
+        }
       },
     },
   });
-}
+}

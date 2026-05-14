@@ -26,15 +26,17 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-full flex-col bg-slate-900 text-white">
-      <div className="flex h-16 items-center px-6">
+    <div className="flex h-full flex-col border-r bg-card text-card-foreground">
+      <div className="flex h-16 items-center px-6 border-b">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <Landmark className="h-8 w-8 text-primary" />
-          <span className="text-xl font-bold tracking-tight">PrestamosApp</span>
+          <div className="rounded-xl bg-primary p-1.5 text-primary-foreground shadow-lg shadow-primary/20">
+            <Landmark className="h-6 w-6" />
+          </div>
+          <span className="text-xl font-bold tracking-tight text-foreground">PrestamosApp</span>
         </Link>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-1 px-3 py-6">
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
@@ -42,16 +44,16 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                'group flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                'group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
                 isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  ? 'bg-primary/10 text-primary shadow-sm'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               )}
             >
               <item.icon
                 className={cn(
-                  'mr-3 h-5 w-5 flex-shrink-0',
-                  isActive ? 'text-primary-foreground' : 'text-slate-400 group-hover:text-white'
+                  'mr-3 h-5 w-5 flex-shrink-0 transition-colors',
+                  isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
                 )}
                 aria-hidden="true"
               />
@@ -61,18 +63,19 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-slate-800 p-4">
+      <div className="border-t p-4">
         <button
           onClick={() => logout()}
-          className="group flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+          className="group flex w-full items-center rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"
         >
           <LogOut
-            className="mr-3 h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-white"
+            className="mr-3 h-5 w-5 flex-shrink-0 text-muted-foreground transition-colors group-hover:text-destructive"
             aria-hidden="true"
           />
           Cerrar Sesión
         </button>
       </div>
     </div>
+
   );
 }
