@@ -1,0 +1,37 @@
+Resumen Day7 - Pagos
+
+Rama: feature/day7-pagos
+Fecha: 2026-05-18
+
+Cambios principales implementados:
+- API: CRUD de pagos
+  - src/app/api/payments/route.ts (POST, GET)
+  - src/app/api/payments/[id]/route.ts (PATCH, DELETE)
+- Hooks cliente:
+  - src/hooks/usePayments.ts (useRegisterPayment, usePaymentHistory, useUpdatePayment, useDeletePayment)
+- UI:
+  - src/components/payments/PaymentDialog.tsx (registro)
+  - src/components/payments/PaymentForm.tsx (página de nuevo pago)
+  - src/components/payments/PaymentHistory.tsx (historial con editar/eliminar)
+  - src/components/payments/PaymentEditDialog.tsx (editar pago)
+- Validaciones:
+  - src/lib/validations/paymentSchema.ts
+- Formateo de fechas y corrección de TZ:
+  - src/lib/formatters.ts (manejo seguro de YYYY-MM-DD)
+- Corrección de nesting de enlaces:
+  - src/components/loans/LoanCard.tsx (eliminado Link anidado en Button)
+
+Notas:
+- Se normaliza y persiste `payment_date` como fecha (YYYY-MM-DD) en DB.
+- El cliente envía fechas en formato `YYYY-MM-DD` para evitar shifts por zona horaria.
+- Ejecuta `npm run typecheck` localmente; si da errores relacionados con `.next/dev/types`, agregar `"exclude": [".next"]` en `tsconfig.json` temporalmente.
+
+Siguientes pasos recomendados (manual):
+1. Ejecutar pruebas manuales: crear, editar, eliminar pagos y verificar cronograma/historial.
+2. Añadir tests si se desea cobertura automatizada.
+3. Hacer push a remoto desde esta rama: `git push origin feature/day7-pagos`.
+
+Commit propuesto:
+feat(pagos): completar Day7 — CRUD pagos, edición flexible de fechas y sincronización cronograma/historial
+
+Yo he agregado y commiteado los cambios localmente; por favor revisa y haz `git push` cuando estés listo.

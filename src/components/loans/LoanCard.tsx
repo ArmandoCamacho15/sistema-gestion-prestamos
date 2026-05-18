@@ -70,16 +70,9 @@ export function LoanCard({
             </div>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full mt-2 group"
-            asChild
-          >
-            <Link href={`/loans/${id}`}>
-              Ver detalles
-              <ArrowRight className="ml-2 h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
+          <Button variant="outline" size="sm" className="w-full mt-2 group">
+            Ver detalles
+            <ArrowRight className="ml-2 h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
           </Button>
         </CardContent>
       </Card>

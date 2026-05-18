@@ -14,10 +14,22 @@ export function formatCurrency(amount: number): string {
  * Formatea una fecha en formato corto (DD/MM/YYYY).
  */
 export function formatDate(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return new Intl.DateTimeFormat('es-CO', {
+  const formatter = new Intl.DateTimeFormat('es-CO', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-  }).format(d);
+  });
+
+  if (typeof date === 'string') {
+    const s = date.trim();
+    // If string is YYYY-MM-DD, construct local Date to avoid timezone shifts
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+      const [y, m, d] = s.split('-').map(Number);
+      return formatter.format(new Date(y, m - 1, d));
+    }
+    const dObj = new Date(s);
+    return formatter.format(dObj);
+  }
+
+  return formatter.format(date);
 }
