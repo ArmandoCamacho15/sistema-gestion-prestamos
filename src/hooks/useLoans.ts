@@ -40,3 +40,23 @@ export function useCreateLoan() {
     },
   });
 }
+
+export function useDeleteLoan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/loans/${id}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Error al eliminar el préstamo');
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['loans'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    },
+  });
+}

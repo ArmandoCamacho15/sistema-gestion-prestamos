@@ -1,30 +1,36 @@
 'use client';
 
-import { useClient } from '@/hooks/useClients';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, Calendar, User, DollarSign, Clock, CheckCircle2, AlertCircle, Printer } from 'lucide-react';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { formatCurrency, formatDate } from '@/lib/formatters';
-import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  ChevronLeft,
+  User,
+  DollarSign,
+  Clock,
+  Printer,
+  Trash2,
+  Loader2,
+} from 'lucide-react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { PaymentDialog } from '@/components/payments/PaymentDialog';
+import { useState } from 'react';
+import { useDeleteLoan } from '@/hooks/useLoans';
+import { toast } from 'sonner';
+import { LoanStatusBadge } from '@/components/loans/LoanStatusBadge';
+import { InstallmentTable } from '@/components/installments/InstallmentTable';
 
 export default function LoanDetailsPage() {
   const params = useParams();
   const id = params.id as string;
+  const router = useRouter();
   const supabase = createSupabaseBrowserClient();
+  const deleteLoan = useDeleteLoan();
+  const [selectedInstallment, setSelectedInstallment] = useState<any>(null);
 
-  // Fetch loan with installments
   const { data: loan, isLoading } = useQuery({
     queryKey: ['loans', id],
     queryFn: async () => {
@@ -35,15 +41,27 @@ export default function LoanDetailsPage() {
         .single();
 
       if (error) throw error;
-      
-      // Ordenar cuotas por número
       if (data.installments) {
         data.installments.sort((a: any, b: any) => a.installment_number - b.installment_number);
       }
-      
       return data;
     },
   });
+
+  const handleDelete = async () => {
+    if (!confirm('¿Estás seguro de que deseas eliminar este préstamo? Esta acción es irreversible.')) return;
+    try {
+      await deleteLoan.mutateAsync(id);
+      toast.success('Préstamo eliminado exitosamente');
+      router.push('/loans');
+    } catch (error: any) {
+      toast.error(error.message || 'Error al eliminar el préstamo');
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   if (isLoading) {
     return (
@@ -64,9 +82,13 @@ export default function LoanDetailsPage() {
     );
   }
 
+  const paidCount = loan.installments?.filter((i: any) => i.status === 'paid').length || 0;
+  const totalCount = loan.installments?.length || 0;
+  const progressPercent = totalCount > 0 ? Math.round((paidCount / totalCount) * 100) : 0;
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 print:space-y-4">
+      <div className="flex items-center justify-between print:hidden">
         <div className="flex items-center gap-4">
           <Button variant="ghost" asChild className="-ml-2">
             <Link href="/loans">
@@ -75,17 +97,39 @@ export default function LoanDetailsPage() {
             </Link>
           </Button>
           <h1 className="text-2xl font-bold tracking-tight">Detalles del Préstamo</h1>
-          <Badge variant={loan.status === 'activo' ? 'default' : 'secondary'}>
-            {loan.status.toUpperCase()}
-          </Badge>
+          <LoanStatusBadge status={loan.status} />
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handlePrint}>
             <Printer className="mr-2 h-4 w-4" />
             Imprimir Recibo
           </Button>
+          <Button 
+            variant="destructive" 
+            onClick={handleDelete}
+            disabled={deleteLoan.isPending}
+          >
+            {deleteLoan.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+            Eliminar
+          </Button>
         </div>
       </div>
+
+      {/* Barra de progreso */}
+      <Card className="border-primary/20">
+        <CardContent className="pt-4">
+          <div className="flex justify-between text-sm mb-2">
+            <span className="text-muted-foreground">Progreso de pago</span>
+            <span className="font-bold">{paidCount}/{totalCount} cuotas ({progressPercent}%)</span>
+          </div>
+          <div className="w-full bg-muted rounded-full h-3">
+            <div
+              className="bg-primary rounded-full h-3 transition-all duration-500"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Info del Cliente */}
@@ -99,8 +143,12 @@ export default function LoanDetailsPage() {
           <CardContent className="space-y-1">
             <div className="text-lg font-bold">{loan.clients?.full_name}</div>
             <div className="text-sm text-muted-foreground">ID: {loan.clients?.identification}</div>
-            <div className="text-sm text-muted-foreground">Tel: {loan.clients?.phone}</div>
-            <div className="text-sm text-muted-foreground">{loan.clients?.email}</div>
+            {loan.clients?.phone && (
+              <div className="text-sm text-muted-foreground">Tel: {loan.clients.phone}</div>
+            )}
+            {loan.clients?.email && (
+              <div className="text-sm text-muted-foreground">{loan.clients.email}</div>
+            )}
           </CardContent>
         </Card>
 
@@ -150,7 +198,7 @@ export default function LoanDetailsPage() {
               <span className="font-medium">{loan.term_months} meses</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Cuota Mensual:</span>
+              <span className="text-muted-foreground">Cuota:</span>
               <span className="font-bold text-primary">{formatCurrency(loan.installment_amount)}</span>
             </div>
           </CardContent>
@@ -162,53 +210,24 @@ export default function LoanDetailsPage() {
         <CardHeader>
           <CardTitle>Cronograma de Pagos</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12 text-center">#</TableHead>
-                <TableHead>Fecha Vencimiento</TableHead>
-                <TableHead className="text-right">Monto Cuota</TableHead>
-                <TableHead className="text-right">Capital</TableHead>
-                <TableHead className="text-right">Interés</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loan.installments?.map((inst: any) => (
-                <TableRow key={inst.id}>
-                  <TableCell className="text-center font-medium">{inst.installment_number}</TableCell>
-                  <TableCell>{formatDate(inst.due_date)}</TableCell>
-                  <TableCell className="text-right font-bold">{formatCurrency(inst.total_amount)}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">{formatCurrency(inst.capital_amount)}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">{formatCurrency(inst.interest_amount)}</TableCell>
-                  <TableCell>
-                    {inst.status === 'paid' ? (
-                      <Badge className="bg-green-500 hover:bg-green-600">
-                        <CheckCircle2 className="mr-1 h-3 w-3" /> Pagada
-                      </Badge>
-                    ) : inst.status === 'late' ? (
-                      <Badge variant="destructive">
-                        <AlertCircle className="mr-1 h-3 w-3" /> Atrasada
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline">Pendiente</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {inst.status !== 'paid' && (
-                      <Button size="sm" variant="outline">
-                        Cobrar
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <CardContent>
+          <InstallmentTable
+            installments={loan.installments || []}
+            onPayClick={(inst) => setSelectedInstallment(inst)}
+            showActions={true}
+          />
         </CardContent>
       </Card>
+
+      {/* Diálogo de Pago */}
+      {selectedInstallment && (
+        <PaymentDialog
+          open={!!selectedInstallment}
+          onClose={() => setSelectedInstallment(null)}
+          installment={selectedInstallment}
+          loanId={id}
+        />
+      )}
     </div>
   );
 }
