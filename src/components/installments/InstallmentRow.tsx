@@ -4,11 +4,13 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, CheckCircle2, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 
 interface InstallmentRowProps {
   installment: {
     id: string;
+    loan_id?: string;
     installment_number: number;
     due_date: string;
     total_amount: number;
@@ -19,12 +21,14 @@ interface InstallmentRowProps {
   };
   onPayClick?: () => void;
   showActions?: boolean;
+  loanId?: string;
 }
 
 export function InstallmentRow({
   installment,
   onPayClick,
   showActions = true,
+  loanId,
 }: InstallmentRowProps) {
   const getStatusBadge = () => {
     if (installment.status === 'paid') {
@@ -48,6 +52,10 @@ export function InstallmentRow({
     return <Badge variant="outline">Pendiente</Badge>;
   };
 
+  const paymentUrl = loanId 
+    ? `/loans/${loanId}/payments/new?installment_id=${installment.id}`
+    : '#';
+
   return (
     <TableRow className={installment.status === 'paid' ? 'opacity-60' : ''}>
       <TableCell className="text-center font-medium w-12">
@@ -70,7 +78,14 @@ export function InstallmentRow({
       </TableCell>
       <TableCell>{getStatusBadge()}</TableCell>
       <TableCell className="text-right">
-        {showActions && installment.status !== 'paid' && (
+        {showActions && installment.status !== 'paid' && loanId && (
+          <Button size="sm" asChild>
+            <Link href={paymentUrl}>
+              Cobrar
+            </Link>
+          </Button>
+        )}
+        {showActions && installment.status !== 'paid' && !loanId && (
           <Button size="sm" onClick={onPayClick}>
             Cobrar
           </Button>

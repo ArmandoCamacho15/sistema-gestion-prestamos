@@ -24,12 +24,14 @@ interface InstallmentTableProps {
   installments: Installment[];
   onPayClick?: (installment: Installment) => void;
   showActions?: boolean;
+  loanId?: string;
 }
 
 export function InstallmentTable({
   installments,
   onPayClick,
   showActions = true,
+  loanId,
 }: InstallmentTableProps) {
   if (!installments || installments.length === 0) {
     return (
@@ -60,6 +62,7 @@ export function InstallmentTable({
               installment={inst}
               onPayClick={() => onPayClick?.(inst)}
               showActions={showActions}
+              loanId={loanId}
             />
           ))}
         </TableBody>

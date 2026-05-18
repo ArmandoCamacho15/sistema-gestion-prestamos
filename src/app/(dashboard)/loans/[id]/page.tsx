@@ -17,6 +17,7 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { PaymentDialog } from '@/components/payments/PaymentDialog';
+import { PaymentHistory } from '@/components/payments/PaymentHistory';
 import { useState } from 'react';
 import { useDeleteLoan } from '@/hooks/useLoans';
 import { toast } from 'sonner';
@@ -213,13 +214,18 @@ export default function LoanDetailsPage() {
         <CardContent>
           <InstallmentTable
             installments={loan.installments || []}
-            onPayClick={(inst) => setSelectedInstallment(inst)}
+            loanId={id}
             showActions={true}
           />
         </CardContent>
       </Card>
 
-      {/* Diálogo de Pago */}
+      {/* Historial de pagos (editar / eliminar) */}
+      <div>
+        <PaymentHistory loanId={id} />
+      </div>
+
+      {/* Diálogo de Pago (deprecated - usar página de pagos) */}
       {selectedInstallment && (
         <PaymentDialog
           open={!!selectedInstallment}
