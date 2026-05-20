@@ -1,68 +1,74 @@
-import { useQuery } from '@tanstack/react-query';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { useQuery } from "@tanstack/react-query";
 
-export function useDashboardStats() {
-  const supabase = createSupabaseBrowserClient();
+export interface DashboardSummary {
+  active_loans: number;
+  late_loans: number;
+  paid_loans: number;
+  total_active_capital: number;
+  total_active_amount: number;
+}
 
+export interface UpcomingInstallment {
+  id: string;
+  loan_id: string;
+  installment_number: number;
+  due_date: string;
+  capital_amount: number;
+  interest_amount: number;
+  total_amount: number;
+  balance_after: number;
+  status: string;
+  user_id: string;
+  client_name: string;
+  loan_amount: number;
+}
+
+export interface LateInstallment extends UpcomingInstallment {
+  days_overdue: number;
+}
+
+export interface MonthlyCashflow {
+  user_id: string;
+  month: string;
+  total_received: number;
+  payment_count: number;
+}
+
+export interface ProjectedCashflow {
+  month: string;
+  projected_capital: number;
+  projected_interest: number;
+  projected_total: number;
+}
+
+export interface CapitalSummary {
+  total_injected: number;
+  total_withdrawn: number;
+  net_capital: number;
+}
+
+export interface DashboardData {
+  summary: DashboardSummary;
+  upcomingInstallments: UpcomingInstallment[];
+  lateInstallments: LateInstallment[];
+  monthlyCashflow: MonthlyCashflow[];
+  projectedCashflow: ProjectedCashflow[];
+  capitalSummary: CapitalSummary;
+}
+
+async function fetchDashboardData(period: string): Promise<DashboardData> {
+  const res = await fetch(`/api/dashboard?period=${period}`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Error al cargar los datos del dashboard");
+  }
+  return res.json();
+}
+
+export function useDashboard(period: string = "all") {
   return useQuery({
-    queryKey: ['dashboard-stats'],
-    queryFn: async () => {
-      // 1. Obtener resumen de préstamos desde la vista
-      const { data: summary, error: summaryError } = await supabase
-        .from('v_loan_summary')
-        .select('*')
-        .single();
-
-      if (summaryError && summaryError.code !== 'PGRST116') {
-        console.error('Summary error:', summaryError);
-      }
-
-      // 2. Obtener conteo de clientes
-      const { count: clientCount } = await supabase
-        .from('clients')
-        .select('*', { count: 'exact', head: true });
-
-      // 3. Recaudo próximos 30 días:
-      //    Primero obtenemos los IDs de los préstamos del usuario (activos)
-      const { data: userLoans } = await supabase
-        .from('loans')
-        .select('id')
-        .eq('status', 'activo');
-
-      let estimatedCollection = 0;
-
-      if (userLoans && userLoans.length > 0) {
-        const loanIds = userLoans.map((l: any) => l.id);
-
-        // Calculamos el rango de fechas con UTC consistente
-        const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
-        const future = new Date(now);
-        future.setDate(future.getDate() + 31); // +31 para incluir el día 30 completo
-        const futureStr = future.toISOString().split('T')[0];
-
-        const { data: installments, error: instError } = await supabase
-          .from('installments')
-          .select('total_amount, due_date, status')
-          .in('loan_id', loanIds)
-          .eq('status', 'pending')
-          .gte('due_date', todayStr)
-          .lte('due_date', futureStr);
-
-        if (instError) {
-          console.error('Installments error:', instError);
-        }
-
-        estimatedCollection = (installments || [])
-          .reduce((sum: number, inst: any) => sum + Number(inst.total_amount), 0);
-      }
-
-      return {
-        totalActiveCapital: summary?.total_active_capital || 0,
-        activeLoans: summary?.active_loans || 0,
-        totalClients: clientCount || 0,
-        estimatedCollection,
-      };
-    },
+    queryKey: ["dashboard", period],
+    queryFn: () => fetchDashboardData(period),
+    refetchInterval: 5 * 60 * 1000, // Refrescar cada 5 minutos
   });
 }
