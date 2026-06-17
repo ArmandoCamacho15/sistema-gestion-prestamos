@@ -80,8 +80,10 @@ export default function DashboardPage() {
       : 0;
 
   // Calculamos el recaudo histórico (Ganancia) para el KPI
-  const recaudoHistorico = monthlyCashflow.reduce(
-    (acc, curr) => acc + Number(curr.total_received),
+  const recaudoTotal = monthlyCashflow.reduce((acc, curr) => acc + Number(curr.total_received), 0);
+  const recaudoCapital = monthlyCashflow.reduce((acc, curr) => acc + Number(curr.capital_received || 0), 0);
+  const recaudoInteres = monthlyCashflow.reduce(
+    (acc, curr) => acc + Number(curr.interest_received || 0) + Number(curr.late_interest_received || 0),
     0
   );
 
@@ -110,30 +112,37 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
         <KpiCard
-          title="Capital Prestado (Vigente)"
-          value={formatCurrency(capitalPrestado)}
+          title="Capital Disponible"
+          value={formatCurrency(Number(capitalSummary.capital_disponible))}
           icon={<Wallet className="h-4 w-4 text-primary opacity-70" />}
-          description={`${prestamosActivos} préstamos activos`}
-          className="border-primary/10 bg-card hover:shadow-md transition-all"
+          description="Liquidez para nuevos préstamos"
+          className="border-primary/20 bg-card hover:shadow-md transition-all shadow-sm"
+        />
+        <KpiCard
+          title="Capital en la Calle"
+          value={formatCurrency(Number(capitalSummary.capital_en_calle))}
+          icon={<TrendingUp className="h-4 w-4 text-orange-500 opacity-70" />}
+          description="Saldo de capital prestado"
+          className="border-orange-500/20 bg-card hover:shadow-md transition-all"
+        />
+        <KpiCard
+          title="Intereses Ganados"
+          value={formatCurrency(Number(capitalSummary.total_recuperado_intereses))}
+          icon={<Banknote className="h-4 w-4 text-emerald-500 opacity-70" />}
+          description="Ganancia real obtenida"
+          className="border-emerald-500/20 bg-card hover:shadow-md transition-all"
         />
         <KpiCard
           title="Retorno Esperado"
-          value={formatCurrency(Number(summary.total_active_amount) - capitalPrestado)}
-          icon={<Banknote className="h-4 w-4 text-primary opacity-70" />}
-          description="Intereses pendientes de cobro"
-          className="border-primary/10 bg-card hover:shadow-md transition-all"
+          value={formatCurrency(Number(capitalSummary.interes_esperado))}
+          icon={<Banknote className="h-4 w-4 text-blue-400 opacity-70" />}
+          description="Intereses por cobrar"
+          className="border-blue-400/20 bg-card hover:shadow-md transition-all"
         />
         <KpiCard
-          title="Recaudo (Periodo)"
-          value={formatCurrency(recaudoHistorico)}
-          icon={<TrendingUp className="h-4 w-4 text-green-500 opacity-70" />}
-          description={period === 'all' ? "Histórico total" : "En el periodo seleccionado"}
-          className="border-primary/10 bg-card hover:shadow-md transition-all"
-        />
-        <KpiCard
-          title="Cartera en Riesgo (PAR)"
+          title="Cartera en Riesgo"
           value={`${tasaMorosidad.toFixed(1)}%`}
           icon={<AlertCircle className={`h-4 w-4 ${tasaMorosidad > 10 ? 'text-red-500' : 'text-muted-foreground opacity-70'}`} />}
           description={`${prestamosMorosos} préstamos en mora`}

@@ -31,6 +31,9 @@ export interface MonthlyCashflow {
   user_id: string;
   month: string;
   total_received: number;
+  capital_received: number;
+  interest_received: number;
+  late_interest_received: number;
   payment_count: number;
 }
 
@@ -41,10 +44,14 @@ export interface ProjectedCashflow {
   projected_total: number;
 }
 
-export interface CapitalSummary {
-  total_injected: number;
-  total_withdrawn: number;
+export interface PortfolioSummary {
   net_capital: number;
+  total_prestado_historico: number;
+  total_recuperado_capital: number;
+  total_recuperado_intereses: number;
+  capital_en_calle: number;
+  capital_disponible: number;
+  interes_esperado: number;
 }
 
 export interface DashboardData {
@@ -53,7 +60,7 @@ export interface DashboardData {
   lateInstallments: LateInstallment[];
   monthlyCashflow: MonthlyCashflow[];
   projectedCashflow: ProjectedCashflow[];
-  capitalSummary: CapitalSummary;
+  capitalSummary: PortfolioSummary;
 }
 
 async function fetchDashboardData(period: string): Promise<DashboardData> {

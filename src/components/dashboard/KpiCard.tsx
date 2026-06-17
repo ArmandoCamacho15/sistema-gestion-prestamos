@@ -5,7 +5,7 @@ interface KpiCardProps {
   title: string;
   value: string | number;
   icon?: ReactNode;
-  description?: string;
+  description?: ReactNode;
   className?: string;
 }
 
@@ -19,7 +19,7 @@ export function KpiCard({ title, value, icon, description, className }: KpiCardP
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
         {description && (
-          <p className="text-xs text-muted-foreground mt-1">{description}</p>
+          <div className="text-xs text-muted-foreground mt-1">{description}</div>
         )}
       </CardContent>
     </Card>

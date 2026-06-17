@@ -4,7 +4,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, CheckCircle2, AlertCircle } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 
 interface InstallmentRowProps {
@@ -30,6 +30,8 @@ export function InstallmentRow({
   showActions = true,
   loanId,
 }: InstallmentRowProps) {
+  const router = useRouter();
+
   const getStatusBadge = () => {
     if (installment.status === 'paid') {
       return (
@@ -79,10 +81,8 @@ export function InstallmentRow({
       <TableCell>{getStatusBadge()}</TableCell>
       <TableCell className="text-right">
         {showActions && installment.status !== 'paid' && loanId && (
-          <Button size="sm" asChild>
-            <Link href={paymentUrl}>
-              Cobrar
-            </Link>
+          <Button size="sm" onClick={() => router.push(paymentUrl)}>
+            Cobrar
           </Button>
         )}
         {showActions && installment.status !== 'paid' && !loanId && (

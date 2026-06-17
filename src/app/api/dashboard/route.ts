@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
         .eq("user_id", user.id)
         .order("days_overdue", { ascending: false }),
       cashflowQuery,
-      supabase.from("v_capital_summary").select("*").eq("user_id", user.id).single(),
+      supabase.from("v_portfolio_summary").select("*").eq("user_id", user.id).single(),
       supabase
         .from("v_projected_cashflow")
         .select("*")
@@ -86,9 +86,13 @@ export async function GET(request: NextRequest) {
         total_active_amount: 0,
       },
       capitalSummary: capitalSummary || {
-        total_injected: 0,
-        total_withdrawn: 0,
         net_capital: 0,
+        total_prestado_historico: 0,
+        total_recuperado_capital: 0,
+        total_recuperado_intereses: 0,
+        capital_en_calle: 0,
+        capital_disponible: 0,
+        interes_esperado: 0,
       },
       upcomingInstallments: upcoming || [],
       lateInstallments: late || [],
