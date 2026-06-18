@@ -7,13 +7,13 @@ import {
   User,
   DollarSign,
   Clock,
-  Printer,
+  FileDown,
   Trash2,
   Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatCurrency } from '@/lib/formatters';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { PaymentDialog } from '@/components/payments/PaymentDialog';
@@ -31,6 +31,7 @@ export default function LoanDetailsPage() {
   const supabase = createSupabaseBrowserClient();
   const deleteLoan = useDeleteLoan();
   const [selectedInstallment, setSelectedInstallment] = useState<any>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const { data: loan, isLoading } = useQuery({
     queryKey: ['loans', id],
@@ -60,8 +61,19 @@ export default function LoanDetailsPage() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handleExportPdf = async () => {
+    if (!loan) return;
+    setIsExporting(true);
+    try {
+      const { exportLoanPdf } = await import('@/lib/exportPdf');
+      await exportLoanPdf(loan);
+      toast.success('PDF generado exitosamente');
+    } catch (error: any) {
+      console.error('Error exporting PDF:', error);
+      toast.error('Error al generar el PDF');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   if (isLoading) {
@@ -101,9 +113,9 @@ export default function LoanDetailsPage() {
           <LoanStatusBadge status={loan.status} />
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="mr-2 h-4 w-4" />
-            Imprimir Recibo
+          <Button variant="outline" onClick={handleExportPdf} disabled={isExporting}>
+            {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
+            {isExporting ? 'Generando...' : 'Exportar PDF'}
           </Button>
           <Button 
             variant="destructive" 

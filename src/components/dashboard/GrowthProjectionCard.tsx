@@ -1,14 +1,14 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DashboardSummary, CapitalSummary } from "@/hooks/useDashboard";
+import { DashboardSummary, PortfolioSummary } from "@/hooks/useDashboard";
 import { formatCurrency } from "@/lib/formatters";
 import { TrendingUp, Info } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
 
 interface GrowthProjectionCardProps {
   summary: DashboardSummary;
-  capitalSummary: CapitalSummary;
+  capitalSummary: PortfolioSummary;
 }
 
 export function GrowthProjectionCard({ summary, capitalSummary }: GrowthProjectionCardProps) {

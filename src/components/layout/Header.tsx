@@ -2,8 +2,7 @@
 
 import { ThemeToggle } from './ThemeToggle';
 import { MobileNav } from './MobileNav';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { GlobalSearch } from './GlobalSearch';
 
 export function Header() {
   return (
@@ -11,12 +10,7 @@ export function Header() {
       <div className="flex items-center gap-4">
         <MobileNav />
         <div className="relative hidden w-full max-w-sm sm:block">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Buscar préstamos o clientes..."
-            className="w-[300px] pl-9 lg:w-[400px]"
-          />
+          <GlobalSearch />
         </div>
       </div>
 
