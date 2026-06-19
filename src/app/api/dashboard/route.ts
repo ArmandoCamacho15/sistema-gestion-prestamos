@@ -49,6 +49,8 @@ export async function GET(request: NextRequest) {
       { data: cashflow, error: cashflowError },
       { data: capitalSummary, error: capitalError },
       { data: projectedCashflow, error: projectedError },
+      { data: settingsData, error: settingsError },
+      { data: topClients, error: topClientsError },
     ] = await Promise.all([
       supabase.from("v_loan_summary").select("*").eq("user_id", user.id).single(),
       supabase
@@ -70,12 +72,55 @@ export async function GET(request: NextRequest) {
         .eq("user_id", user.id)
         .order("month", { ascending: true })
         .limit(6),
+      supabase.from("settings").select("*").eq("user_id", user.id),
+      supabase.rpc("get_top_debt_clients", { p_user_id: user.id }),
     ]);
+
+    // Parse Settings
+    const defaultSettings = {
+      operating_expenses: 20,
+      provision_mora: 10,
+      grace_days: 15,
+      max_active_loans: 2,
+      min_liquidity_percent: 30,
+    };
+    const settings = { ...defaultSettings };
+    settingsData?.forEach((setting) => {
+      if (settings.hasOwnProperty(setting.key)) {
+        // @ts-ignore
+        settings[setting.key] = Number(setting.value);
+      }
+    });
 
     if (summaryError && summaryError.code !== "PGRST116") {
       console.error("Error fetching summary:", summaryError);
       throw summaryError;
     }
+
+    // Pad projectedCashflow to always show 6 months
+    const paddedProjectedCashflow = [...(projectedCashflow || [])];
+    const today = new Date();
+    for (let i = 0; i < 6; i++) {
+      // Current month + i
+      const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const monthStr = `${yyyy}-${mm}`; // Postgres format for YYYY-MM
+      
+      // Check if exists
+      const exists = paddedProjectedCashflow.find((p) => p.month && p.month.startsWith(monthStr));
+      if (!exists) {
+        paddedProjectedCashflow.push({
+          month: `${monthStr}-01T00:00:00+00:00`,
+          projected_capital: 0,
+          projected_interest: 0,
+          projected_total: 0,
+          user_id: user.id,
+        });
+      }
+    }
+    // Sort chronologically
+    paddedProjectedCashflow.sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
 
     return NextResponse.json({
       summary: summary || {
@@ -97,7 +142,9 @@ export async function GET(request: NextRequest) {
       upcomingInstallments: upcoming || [],
       lateInstallments: late || [],
       monthlyCashflow: cashflow?.reverse() || [],
-      projectedCashflow: projectedCashflow || [],
+      projectedCashflow: paddedProjectedCashflow,
+      topClients: topClients || [],
+      settings,
     });
   } catch (error: any) {
     console.error("Error en dashboard API:", error);

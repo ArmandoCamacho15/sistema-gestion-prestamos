@@ -10,7 +10,10 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Info } from "lucide-react";
 import { ProjectedCashflow } from "@/hooks/useDashboard";
 import { formatCurrency } from "@/lib/formatters";
 
@@ -51,10 +54,34 @@ export function ProjectedRevenueChart({ data }: ProjectedRevenueChartProps) {
   }
 
   return (
-    <Card>
+    <Card className="shadow-sm border-primary/10">
       <CardHeader>
-        <CardTitle>Proyección de Recaudo Futuro</CardTitle>
-        <CardDescription>Capital recuperado vs Interés ganado (Ganancia)</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Proyección de Recaudo Futuro</CardTitle>
+            <CardDescription>
+              Capital recuperado vs Interés ganado (Ganancia)
+            </CardDescription>
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-primary/20 text-muted-foreground hover:text-primary">
+                <Info className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 text-sm">
+              <div className="space-y-2">
+                <h4 className="font-medium text-primary">¿De dónde sale esta gráfica?</h4>
+                <p className="text-muted-foreground">
+                  Suma todas las cuotas de los próximos 6 meses basándose en sus <b>fechas de vencimiento</b> reales.
+                </p>
+                <p className="text-muted-foreground">
+                  Separa visualmente la parte de la cuota que es <b>Capital</b> (dinero que te devuelven) y la parte que es <b>Interés</b> (tu ganancia real).
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="h-[300px] w-full">

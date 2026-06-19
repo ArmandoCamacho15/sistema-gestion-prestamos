@@ -54,6 +54,21 @@ export interface PortfolioSummary {
   interes_esperado: number;
 }
 
+export interface TopClient {
+  client_id: string;
+  full_name: string;
+  active_loans_count: number;
+  total_pending_debt: number;
+}
+
+export interface Settings {
+  operating_expenses: number;
+  provision_mora: number;
+  grace_days: number;
+  max_active_loans: number;
+  min_liquidity_percent: number;
+}
+
 export interface DashboardData {
   summary: DashboardSummary;
   upcomingInstallments: UpcomingInstallment[];
@@ -61,6 +76,8 @@ export interface DashboardData {
   monthlyCashflow: MonthlyCashflow[];
   projectedCashflow: ProjectedCashflow[];
   capitalSummary: PortfolioSummary;
+  topClients: TopClient[];
+  settings: Settings;
 }
 
 async function fetchDashboardData(period: string): Promise<DashboardData> {

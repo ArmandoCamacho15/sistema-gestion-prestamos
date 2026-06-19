@@ -11,6 +11,7 @@ import {
   HelpCircle,
   LogOut,
   Landmark,
+  ClipboardList,
 } from 'lucide-react';
 import { logout } from '@/lib/auth/actions';
 
@@ -19,6 +20,7 @@ const navigation = [
   { name: 'Clientes', href: '/clients', icon: Users },
   { name: 'Préstamos', href: '/loans', icon: HandCoins },
   { name: 'Configuración', href: '/settings', icon: Settings },
+  { name: 'Auditoría', href: '/auditoria', icon: ClipboardList },
   { name: 'Ayuda', href: '/ayuda', icon: HelpCircle },
 ];
 

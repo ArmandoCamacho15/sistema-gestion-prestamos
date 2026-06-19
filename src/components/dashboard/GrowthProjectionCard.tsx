@@ -1,6 +1,8 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 import { DashboardSummary, PortfolioSummary } from "@/hooks/useDashboard";
 import { formatCurrency } from "@/lib/formatters";
 import { TrendingUp, Info } from "lucide-react";
@@ -34,11 +36,31 @@ export function GrowthProjectionCard({ summary, capitalSummary }: GrowthProjecti
   const projected24Months = activeAmount * Math.pow((1 + annualYield), 2);
 
   return (
-    <Card className="bg-primary/5 border-primary/20">
-      <CardHeader className="pb-2">
+    <Card className="border-blue-500/20 bg-blue-500/5 shadow-sm">
+      <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Proyección de Crecimiento</CardTitle>
-          <TrendingUp className="h-5 w-5 text-primary" />
+          <div className="flex items-center gap-2">
+            <CardTitle>Proyección de Crecimiento</CardTitle>
+            <TrendingUp className="h-4 w-4 text-blue-500" />
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-blue-500/20 text-muted-foreground hover:text-blue-500">
+                <Info className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 text-sm">
+              <div className="space-y-2">
+                <h4 className="font-medium text-blue-500">¿De dónde sale este cálculo?</h4>
+                <p className="text-muted-foreground">
+                  Toma tus intereses esperados y los divide entre tu capital prestado para sacar un <b>% de rendimiento</b>.
+                </p>
+                <p className="text-muted-foreground">
+                  Luego calcula cuánto dinero tendrías si prestas la misma cantidad y cobras ese mismo % de interés de forma repetida (interés compuesto).
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
         <CardDescription>Basado en rendimiento actual (Interés compuesto)</CardDescription>
       </CardHeader>

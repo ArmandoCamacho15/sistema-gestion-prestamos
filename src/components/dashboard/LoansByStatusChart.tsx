@@ -2,6 +2,9 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Info } from "lucide-react";
 import { DashboardSummary } from "@/hooks/useDashboard";
 
 interface LoansByStatusChartProps {
@@ -35,9 +38,29 @@ export function LoansByStatusChart({ summary }: LoansByStatusChartProps) {
   }
 
   return (
-    <Card>
+    <Card className="shadow-sm border-primary/10">
       <CardHeader>
-        <CardTitle>Préstamos por Estado</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Préstamos por Estado</CardTitle>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-primary/20 text-muted-foreground hover:text-primary">
+                <Info className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 text-sm">
+              <div className="space-y-2">
+                <h4 className="font-medium text-primary">¿De dónde sale esta gráfica?</h4>
+                <p className="text-muted-foreground">
+                  Cuenta la <b>cantidad total de préstamos</b> que tienes en el sistema y los agrupa según su estado actual.
+                </p>
+                <p className="text-muted-foreground">
+                  Un préstamo es "Activo" si tiene cuotas pendientes y ninguna está vencida. Pasa a "Moroso" automáticamente si una cuota se retrasa más allá de tus días de gracia configurados.
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </CardHeader>
       <CardContent className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">

@@ -9,6 +9,10 @@ import { RecentActivityTable } from "@/components/dashboard/RecentActivityTable"
 import { ProjectedRevenueChart } from "@/components/dashboard/ProjectedRevenueChart";
 import { GrowthProjectionCard } from "@/components/dashboard/GrowthProjectionCard";
 import { CapitalManagerModal } from "@/components/dashboard/CapitalManagerModal";
+import { LiquidityAlert } from "@/components/dashboard/LiquidityAlert";
+import { TopClientsTable } from "@/components/dashboard/TopClientsTable";
+import { LateLoansTable } from "@/components/dashboard/LateLoansTable";
+import { NetProfitCard } from "@/components/dashboard/NetProfitCard";
 import { formatCurrency } from "@/lib/formatters";
 import {
   Banknote,
@@ -67,7 +71,7 @@ export default function DashboardPage() {
     );
   }
 
-  const { summary, upcomingInstallments, monthlyCashflow, projectedCashflow, capitalSummary } = data;
+  const { summary, upcomingInstallments, lateInstallments, monthlyCashflow, projectedCashflow, capitalSummary, settings, topClients } = data;
 
   const capitalPrestado = Number(summary.total_active_capital);
   const prestamosActivos = Number(summary.active_loans);
@@ -87,8 +91,24 @@ export default function DashboardPage() {
     0
   );
 
+  // Calcular ganancias netas del mes actual (o último mes con datos)
+  const interesesDelMesActual = 
+    monthlyCashflow.length > 0 
+      ? Number(monthlyCashflow[monthlyCashflow.length - 1]?.interest_received || 0) + Number(monthlyCashflow[monthlyCashflow.length - 1]?.late_interest_received || 0)
+      : 0;
+      
+  const gastosMes = interesesDelMesActual * ((settings?.operating_expenses ?? 20) / 100);
+  const provisionMes = interesesDelMesActual * ((settings?.provision_mora ?? 10) / 100);
+  const gananciasNetasMes = interesesDelMesActual - gastosMes - provisionMes;
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <LiquidityAlert 
+        capitalDisponible={Number(capitalSummary.capital_disponible)} 
+        capitalInvertido={Number(capitalSummary.capital_en_calle)}
+        minLiquidityPercent={settings?.min_liquidity_percent ?? 30}
+      />
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard Financiero</h1>
@@ -112,41 +132,93 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
         <KpiCard
           title="Capital Disponible"
           value={formatCurrency(Number(capitalSummary.capital_disponible))}
-          icon={<Wallet className="h-4 w-4 text-primary opacity-70" />}
           description="Liquidez para nuevos préstamos"
           className="border-primary/20 bg-card hover:shadow-md transition-all shadow-sm"
+          infoNode={
+            <div className="space-y-2">
+              <h4 className="font-medium text-primary">¿De dónde sale?</h4>
+              <p className="text-muted-foreground">
+                Es la suma de todas tus <b>Inyecciones de Capital</b>, restando los <b>Retiros</b> y restando el <b>Capital prestado que aún no vuelve</b>.
+              </p>
+              <p className="text-xs mt-2 bg-muted p-2 rounded">
+                <b>Fórmula:</b> (Inyecciones - Retiros) - Capital en la calle + Capital ya cobrado en cuotas.
+              </p>
+            </div>
+          }
         />
         <KpiCard
           title="Capital en la Calle"
           value={formatCurrency(Number(capitalSummary.capital_en_calle))}
-          icon={<TrendingUp className="h-4 w-4 text-orange-500 opacity-70" />}
           description="Saldo de capital prestado"
           className="border-orange-500/20 bg-card hover:shadow-md transition-all"
+          infoNode={
+            <div className="space-y-2">
+              <h4 className="font-medium text-orange-500">¿Qué significa?</h4>
+              <p className="text-muted-foreground">
+                Es el <b>capital neto (sin intereses)</b> que tus clientes tienen en este momento. Este dinero volverá a ti poco a poco con el pago de cada cuota.
+              </p>
+            </div>
+          }
         />
         <KpiCard
           title="Intereses Ganados"
           value={formatCurrency(Number(capitalSummary.total_recuperado_intereses))}
-          icon={<Banknote className="h-4 w-4 text-emerald-500 opacity-70" />}
-          description="Ganancia real obtenida"
+          description="Ganancia total obtenida"
           className="border-emerald-500/20 bg-card hover:shadow-md transition-all"
+          infoNode={
+            <div className="space-y-2">
+              <h4 className="font-medium text-emerald-500">¿Qué incluye?</h4>
+              <p className="text-muted-foreground">
+                Es la suma total de la parte de <b>interés</b> y los <b>intereses por mora</b> de todas las cuotas que ya han sido <b>pagadas</b>.
+              </p>
+              <p className="text-xs mt-2 bg-muted p-2 rounded">
+                Este valor es bruto histórico, no descuenta gastos operativos.
+              </p>
+            </div>
+          }
+        />
+        <NetProfitCard
+          interesesBrutos={interesesDelMesActual}
+          porcentajeGastos={settings?.operating_expenses ?? 20}
+          porcentajeProvision={settings?.provision_mora ?? 10}
+          gastos={gastosMes}
+          provision={provisionMes}
+          gananciaNeta={gananciasNetasMes}
         />
         <KpiCard
           title="Retorno Esperado"
           value={formatCurrency(Number(capitalSummary.interes_esperado))}
-          icon={<Banknote className="h-4 w-4 text-blue-400 opacity-70" />}
           description="Intereses por cobrar"
           className="border-blue-400/20 bg-card hover:shadow-md transition-all"
+          infoNode={
+            <div className="space-y-2">
+              <h4 className="font-medium text-blue-400">Proyección</h4>
+              <p className="text-muted-foreground">
+                Son todos los <b>intereses que aún faltan por cobrar</b> de los préstamos activos y morosos. Es la ganancia futura asegurada si todos pagan.
+              </p>
+            </div>
+          }
         />
         <KpiCard
           title="Cartera en Riesgo"
           value={`${tasaMorosidad.toFixed(1)}%`}
-          icon={<AlertCircle className={`h-4 w-4 ${tasaMorosidad > 10 ? 'text-red-500' : 'text-muted-foreground opacity-70'}`} />}
           description={`${prestamosMorosos} préstamos en mora`}
           className={`bg-card hover:shadow-md transition-all ${tasaMorosidad > 10 ? "border-red-500/50" : "border-primary/10"}`}
+          infoNode={
+            <div className="space-y-2">
+              <h4 className="font-medium text-red-500">Nivel de Riesgo</h4>
+              <p className="text-muted-foreground">
+                Porcentaje de tus préstamos que están clasificados como morosos (superaron los días de gracia permitidos).
+              </p>
+              <p className="text-xs mt-2 bg-muted p-2 rounded">
+                <b>Fórmula:</b> Préstamos morosos / Total de préstamos activos y morosos.
+              </p>
+            </div>
+          }
         />
       </div>
 
@@ -171,6 +243,11 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+        <TopClientsTable clients={topClients} />
+        <LateLoansTable installments={lateInstallments} />
+      </div>
+
+      <div className="grid gap-4 grid-cols-1">
         <RecentActivityTable installments={upcomingInstallments} />
       </div>
     </div>

@@ -9,7 +9,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Info } from "lucide-react";
 import { MonthlyCashflow } from "@/hooks/useDashboard";
 import { formatCurrency } from "@/lib/formatters";
 interface CashFlowChartProps {
@@ -41,9 +44,29 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
   }
 
   return (
-    <Card className="col-span-1 lg:col-span-2">
+    <Card className="col-span-1 lg:col-span-2 shadow-sm border-primary/10">
       <CardHeader>
-        <CardTitle>Flujo de Caja Mensual (Últimos 6 meses)</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Flujo de Caja Mensual (Últimos 6 meses)</CardTitle>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-primary/20 text-muted-foreground hover:text-primary">
+                <Info className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 text-sm">
+              <div className="space-y-2">
+                <h4 className="font-medium text-primary">¿De dónde sale esta gráfica?</h4>
+                <p className="text-muted-foreground">
+                  Es la suma real de todo el dinero que ha entrado a tu negocio en los últimos 6 meses.
+                </p>
+                <p className="text-muted-foreground">
+                  Se alimenta automáticamente cada vez que haces clic en <b>"Registrar Pago"</b> en la pantalla de un préstamo. Suma tanto el pago de cuotas a tiempo como los pagos con mora.
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </CardHeader>
       <CardContent className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
