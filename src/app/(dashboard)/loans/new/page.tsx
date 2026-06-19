@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { useCreateLoan } from '@/hooks/useLoans';
+import { toast } from 'sonner';
 
 export default function NewLoanPage() {
   const router = useRouter();
@@ -16,10 +17,11 @@ export default function NewLoanPage() {
   const onSubmit = async (values: any) => {
     try {
       await createLoan.mutateAsync(values);
+      toast.success('Préstamo creado exitosamente');
       router.push('/loans');
     } catch (error) {
       console.error(error);
-      alert('Error al crear el préstamo. Verifica los datos.');
+      toast.error('Error al crear el préstamo. Verifica los datos.');
     }
   };
 

@@ -7,6 +7,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function EditClientPage() {
   const router = useRouter();
@@ -19,10 +20,11 @@ export default function EditClientPage() {
   const onSubmit = async (values: any) => {
     try {
       await updateMutation.mutateAsync(values);
+      toast.success('Cliente actualizado exitosamente');
       router.push('/clients');
     } catch (error) {
       console.error(error);
-      alert('Error al actualizar el cliente.');
+      toast.error('Error al actualizar el cliente.');
     }
   };
 

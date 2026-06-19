@@ -43,7 +43,7 @@ export function InstallmentTable({
 
   return (
     <div className="rounded-lg border overflow-x-auto">
-      <Table>
+      <Table className="min-w-[600px]">
         <TableHeader>
           <TableRow>
             <TableHead className="w-12 text-center">#</TableHead>

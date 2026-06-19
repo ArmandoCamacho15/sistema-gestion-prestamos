@@ -132,7 +132,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
         <KpiCard
           title="Capital Disponible"
           value={formatCurrency(Number(capitalSummary.capital_disponible))}

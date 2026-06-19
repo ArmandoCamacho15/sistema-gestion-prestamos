@@ -8,6 +8,8 @@ import {
   BarChart3,
   Settings,
   ChevronRight,
+  ClipboardList,
+  Wallet,
 } from "lucide-react";
 
 const sections = [
@@ -73,6 +75,28 @@ const sections = [
       "Ajusta los parámetros según tu modelo de negocio: Gastos operativos (% sobre intereses), Provisión mora (%), Días de gracia, Máximo préstamos por cliente, Liquidez mínima requerida (%).",
       "Haz clic en «Guardar Configuración». Los cambios se aplican inmediatamente.",
       "Desde la misma pantalla puedes alternar entre el modo oscuro y claro.",
+    ],
+  },
+  {
+    icon: Wallet,
+    title: "6. Gestionar Capital y Ganancia Neta",
+    color: "text-purple-500",
+    bg: "bg-purple-500/10",
+    steps: [
+      "Usa el botón «Gestionar Capital» en el Dashboard para registrar Inyecciones (cuando aportas dinero de tu bolsillo) o Retiros (cuando retiras ganancias).",
+      "La «Ganancia Neta» que se muestra en el Dashboard es la suma de los intereses cobrados en el mes menos el porcentaje que hayas definido para Gastos Operativos y Provisión de Mora en la Configuración.",
+      "El capital de Gastos y Provisión no se retira automáticamente. Tú decides cuándo hacer físicamente el Retiro de Capital.",
+    ],
+  },
+  {
+    icon: ClipboardList,
+    title: "7. Auditoría e Historial",
+    color: "text-yellow-500",
+    bg: "bg-yellow-500/10",
+    steps: [
+      "Ve a la sección «Auditoría» en el menú lateral.",
+      "Allí verás el historial detallado de todo lo que ocurre en el sistema (Creación, Actualización, Eliminación).",
+      "Esto sirve para rastrear quién realizó cambios o recuperarse en caso de errores manuales.",
     ],
   },
 ];

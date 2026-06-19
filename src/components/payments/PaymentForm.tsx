@@ -20,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface PaymentFormProps {
   installment: {
@@ -57,9 +58,11 @@ export function PaymentForm({ installment, loanId }: PaymentFormProps) {
   const onSubmit = async (values: any) => {
     try {
       await registerPayment.mutateAsync(values);
+      toast.success('Pago registrado exitosamente');
       router.back();
     } catch (error) {
-      // Error manejado por el hook
+      console.error(error);
+      toast.error('Error al registrar el pago. Verifica los datos.');
     }
   };
 
@@ -118,7 +121,7 @@ export function PaymentForm({ installment, loanId }: PaymentFormProps) {
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Monto Recibido</FormLabel>
+                    <FormLabel>Monto Recibido <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -138,7 +141,7 @@ export function PaymentForm({ installment, loanId }: PaymentFormProps) {
                 name="paid_date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Fecha de Pago</FormLabel>
+                    <FormLabel>Fecha de Pago <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>

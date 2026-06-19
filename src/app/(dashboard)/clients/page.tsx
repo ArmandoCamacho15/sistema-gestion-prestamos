@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Users, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 export default function ClientsPage() {
   const { data: clients, isLoading, isError } = useClients();
@@ -54,7 +55,10 @@ export default function ClientsPage() {
         <CardContent>
           <ClientList 
             clients={clients || []} 
-            onDelete={(id) => deleteMutation.mutate(id)} 
+            onDelete={(id) => deleteMutation.mutate(id, {
+              onSuccess: () => toast.success('Cliente eliminado exitosamente'),
+              onError: (error) => toast.error('Error al eliminar cliente. Puede que tenga préstamos activos.')
+            })} 
           />
         </CardContent>
       </Card>

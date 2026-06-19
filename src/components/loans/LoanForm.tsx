@@ -69,7 +69,7 @@ export function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
                   name="clientId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cliente</FormLabel>
+                      <FormLabel>Cliente <span className="text-destructive">*</span></FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -101,7 +101,7 @@ export function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
                     name="amount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Monto</FormLabel>
+                        <FormLabel>Monto <span className="text-destructive">*</span></FormLabel>
                         <FormControl>
                           <Input type="number" placeholder="Ej: 1000000" {...field} />
                         </FormControl>
@@ -114,7 +114,7 @@ export function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
                     name="interestRate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Tasa Mensual (%)</FormLabel>
+                        <FormLabel>Tasa Mensual (%) <span className="text-destructive">*</span></FormLabel>
                         <FormControl>
                           <Input type="number" step="0.1" placeholder="Ej: 10" {...field} />
                         </FormControl>
@@ -130,7 +130,7 @@ export function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
                     name="termMonths"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Plazo (Meses)</FormLabel>
+                        <FormLabel>Plazo (Meses) <span className="text-destructive">*</span></FormLabel>
                         <FormControl>
                           <Input type="number" {...field} />
                         </FormControl>
@@ -143,7 +143,7 @@ export function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
                     name="rateType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Tipo de Tasa</FormLabel>
+                        <FormLabel>Tipo de Tasa <span className="text-destructive">*</span></FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -166,7 +166,7 @@ export function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
                   name="paymentFrequency"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Frecuencia de Pago</FormLabel>
+                      <FormLabel>Frecuencia de Pago <span className="text-destructive">*</span></FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -189,7 +189,7 @@ export function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
                     name="startDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Fecha Desembolso</FormLabel>
+                        <FormLabel>Fecha Desembolso <span className="text-destructive">*</span></FormLabel>
                         <FormControl>
                           <Input type="date" {...field} />
                         </FormControl>
@@ -202,7 +202,7 @@ export function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
                     name="firstPaymentDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Primer Pago</FormLabel>
+                        <FormLabel>Primer Pago <span className="text-destructive">*</span></FormLabel>
                         <FormControl>
                           <Input type="date" {...field} />
                         </FormControl>

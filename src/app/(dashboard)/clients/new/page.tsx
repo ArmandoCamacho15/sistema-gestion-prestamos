@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function NewClientPage() {
   const router = useRouter();
@@ -15,10 +16,11 @@ export default function NewClientPage() {
   const onSubmit = async (values: any) => {
     try {
       await createMutation.mutateAsync(values);
+      toast.success('Cliente creado exitosamente');
       router.push('/clients');
     } catch (error) {
       console.error(error);
-      alert('Error al crear el cliente. Verifica los datos.');
+      toast.error('Error al crear el cliente. Verifica los datos.');
     }
   };
 

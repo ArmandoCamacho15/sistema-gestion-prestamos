@@ -41,7 +41,7 @@ export function ClientForm({ initialData, onSubmit, isLoading }: ClientFormProps
           name="fullName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nombre Completo</FormLabel>
+              <FormLabel>Nombre Completo <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input placeholder="Ej: Juan Pérez" {...field} />
               </FormControl>
@@ -54,7 +54,7 @@ export function ClientForm({ initialData, onSubmit, isLoading }: ClientFormProps
           name="identification"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Identificación (DNI/Cédula)</FormLabel>
+              <FormLabel>Identificación (DNI/Cédula) <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input placeholder="Ej: 12345678" {...field} />
               </FormControl>

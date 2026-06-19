@@ -20,6 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export default function SettingsPage() {
   const { data: settings, isLoading, isError, updateSettings, isUpdating } = useSettings();
@@ -213,7 +214,9 @@ export default function SettingsPage() {
                 </div>
 
                 <Button type="submit" disabled={isUpdating} className="w-full md:w-auto">
-                  {isUpdating ? "Guardando..." : "Guardar Configuración"}
+                  {isUpdating ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Guardando...</>
+                  ) : "Guardar Configuración"}
                 </Button>
               </form>
             </Form>
