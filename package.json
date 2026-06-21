@@ -9,7 +9,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "jest --watchAll=false",
-    "test:watch": "jest --watchAll"
+    "test:watch": "jest --watchAll",
+    "db:setup": "echo 'Ejecutar archivos en supabase/migrations/ en orden en el SQL Editor de Supabase'"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
