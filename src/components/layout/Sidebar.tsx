@@ -12,13 +12,24 @@ import {
   LogOut,
   Landmark,
   ClipboardList,
+  UserCheck,
 } from 'lucide-react';
+import { useTeamRole } from '@/providers/TeamRoleProvider';
 import { logout } from '@/lib/auth/actions';
+import { Badge } from '@/components/ui/badge';
+
+const roleLabels: Record<string, string> = {
+  owner: 'Dueño',
+  collector: 'Cobrador',
+  secretary: 'Secretaria',
+  supervisor: 'Supervisor',
+};
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Clientes', href: '/clients', icon: Users },
   { name: 'Préstamos', href: '/loans', icon: HandCoins },
+  { name: 'Equipo', href: '/equipo', icon: UserCheck },
   { name: 'Configuración', href: '/settings', icon: Settings },
   { name: 'Auditoría', href: '/auditoria', icon: ClipboardList },
   { name: 'Ayuda', href: '/ayuda', icon: HelpCircle },
@@ -26,6 +37,21 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { role } = useTeamRole();
+
+  const filteredNavigation = navigation.filter((item) => {
+    if (role === 'owner') return true;
+    if (role === 'supervisor') {
+      return !['Equipo', 'Configuración'].includes(item.name);
+    }
+    if (role === 'secretary') {
+      return !['Dashboard', 'Configuración', 'Auditoría', 'Equipo'].includes(item.name);
+    }
+    if (role === 'collector') {
+      return ['Préstamos', 'Clientes'].includes(item.name);
+    }
+    return false;
+  });
 
   return (
     <div className="flex h-full flex-col border-r bg-card text-card-foreground">
@@ -39,7 +65,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-6">
-        {navigation.map((item) => {
+        {filteredNavigation.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
@@ -65,7 +91,15 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t p-4">
+      <div className="border-t p-4 space-y-3">
+        {/* Chip de rol */}
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50">
+          <UserCheck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <span className="text-xs text-muted-foreground">
+            Rol: <span className="font-semibold text-foreground">{roleLabels[role] ?? role}</span>
+          </span>
+        </div>
+
         <button
           onClick={() => logout()}
           className="group flex w-full items-center rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useTeamRole } from "@/providers/TeamRoleProvider";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { settingsSchema, SettingsFormValues } from "@/lib/validations/settingsSchema";
@@ -24,6 +26,19 @@ import { Loader2 } from "lucide-react";
 
 export default function SettingsPage() {
   const { data: settings, isLoading, isError, updateSettings, isUpdating } = useSettings();
+  const { role } = useTeamRole();
+  const router = useRouter();
+
+  // Solo el owner puede configurar el sistema
+  useEffect(() => {
+    if (role !== 'owner') {
+      router.replace('/loans');
+    }
+  }, [role, router]);
+
+  if (role !== 'owner') {
+    return null;
+  }
 
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),

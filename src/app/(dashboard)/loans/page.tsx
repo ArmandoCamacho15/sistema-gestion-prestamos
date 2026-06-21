@@ -6,9 +6,20 @@ import { Plus, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { useLoans } from '@/hooks/useLoans';
 import { LoanList } from '@/components/loans/LoanList';
+import { useTeamRole } from '@/providers/TeamRoleProvider';
+import { CollectorView } from '@/components/team/CollectorView';
 
 export default function LoansPage() {
   const { data: loans, isLoading } = useLoans();
+  const { role } = useTeamRole();
+
+  // Los cobradores ven su vista dedicada de ruta
+  if (role === 'collector') {
+    return <CollectorView />;
+  }
+
+  // Secretarias y supervisores no pueden eliminar, el owner puede todo
+  const canCreate = role === 'owner' || role === 'secretary';
 
   return (
     <div className="space-y-6">
@@ -19,12 +30,14 @@ export default function LoansPage() {
             Gestiona y supervisa todos los préstamos otorgados.
           </p>
         </div>
-        <Button asChild>
-          <Link href="/loans/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo Préstamo
-          </Link>
-        </Button>
+        {canCreate && (
+          <Button asChild>
+            <Link href="/loans/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Préstamo
+            </Link>
+          </Button>
+        )}
       </div>
 
       {!isLoading && (!loans || loans.length === 0) ? (
@@ -38,12 +51,14 @@ export default function LoansPage() {
               <p className="text-muted-foreground mb-4">
                 Comienza registrando tu primer préstamo en el sistema.
               </p>
-              <Button asChild>
-                <Link href="/loans/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Crear Préstamo
-                </Link>
-              </Button>
+              {canCreate && (
+                <Button asChild>
+                  <Link href="/loans/new">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Crear Préstamo
+                  </Link>
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

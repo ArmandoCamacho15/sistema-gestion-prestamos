@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useDashboard } from "@/hooks/useDashboard";
+import { useTeamRole } from "@/providers/TeamRoleProvider";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { LoansByStatusChart } from "@/components/dashboard/LoansByStatusChart";
 import { CashFlowChart } from "@/components/dashboard/CashFlowChart";
@@ -33,6 +36,19 @@ import {
 export default function DashboardPage() {
   const [period, setPeriod] = useState("all");
   const { data, isLoading, error } = useDashboard(period);
+  const { role } = useTeamRole();
+  const router = useRouter();
+
+  // Los cobradores y secretarias no tienen acceso al dashboard financiero
+  useEffect(() => {
+    if (role === 'collector' || role === 'secretary') {
+      router.replace('/loans');
+    }
+  }, [role, router]);
+
+  if (role === 'collector' || role === 'secretary') {
+    return null; // Esperar la redirección
+  }
 
   if (isLoading) {
     return (
