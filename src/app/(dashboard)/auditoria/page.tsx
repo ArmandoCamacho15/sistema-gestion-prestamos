@@ -69,59 +69,154 @@ const ACTION_CONFIG: Record<
   },
 };
 
-function getEntityName(log: AuditLog): string {
-  const details = log.details as any;
-  if (!details) return "";
-
-  const record = log.action === "UPDATE" ? details.new : details;
-
-  if (log.entity_type === "clients") {
-    return record?.name || "—";
-  }
-  if (log.entity_type === "loans") {
-    const amount = record?.amount
-      ? `$${Number(record.amount).toLocaleString("es-CO")}`
-      : "";
-    return amount ? `Monto: ${amount}` : "—";
-  }
-  if (log.entity_type === "installments") {
-    const amount = record?.total_amount
-      ? `$${Number(record.total_amount).toLocaleString("es-CO")}`
-      : "";
-    return amount ? `Cuota: ${amount}` : "—";
-  }
-  if (log.entity_type === "capital_transactions") {
-    const type = record?.type === "inyeccion" ? "Inyección" : "Retiro";
-    const amount = record?.amount
-      ? `$${Number(record.amount).toLocaleString("es-CO")}`
-      : "";
-    return amount ? `${type}: ${amount}` : "—";
-  }
-  if (log.entity_type === "settings") {
-    return `${record?.key || "—"} → ${record?.value ?? "—"}`;
-  }
-  return "—";
+function formatMoney(val: any): string {
+  if (val == null || val === '') return '—';
+  return `$${Number(val).toLocaleString('es-CO')}`;
 }
 
-function getChangeDescription(log: AuditLog): string | null {
-  if (log.action !== "UPDATE") return null;
+/**
+ * Genera una frase descriptiva clara en español de qué se hizo.
+ * Ej: "Se creó el préstamo de $1.200.000 a 6 meses" 
+ */
+function getActionSummary(log: AuditLog): string {
   const details = log.details as any;
-  if (!details?.old || !details?.new) return null;
+  if (!details) return `${ENTITY_LABELS[log.entity_type] || log.entity_type}`;
 
-  const changes: string[] = [];
-  const skipKeys = ["updated_at", "created_at", "user_id", "id"];
+  const rec = log.action === 'UPDATE' ? (details.new ?? details) : details;
+  const entity = ENTITY_LABELS[log.entity_type] || log.entity_type;
+
+  // ── INSERT ──────────────────────────────────────────
+  if (log.action === 'INSERT') {
+    if (log.entity_type === 'clients') {
+      return `Se registró el cliente "${rec.full_name || rec.name || '—'}"`;
+    }
+    if (log.entity_type === 'loans') {
+      const amount = formatMoney(rec.amount);
+      const months = rec.term_months ? `a ${rec.term_months} meses` : '';
+      const rate = rec.interest_rate ? `al ${rec.interest_rate}%` : '';
+      return `Se creó un préstamo de ${amount} ${rate} ${months}`.trim();
+    }
+    if (log.entity_type === 'installments') {
+      const amount = formatMoney(rec.total_amount);
+      return `Se generó la cuota #${rec.installment_number || '?'} por ${amount}`;
+    }
+    if (log.entity_type === 'capital_transactions') {
+      const type = rec.type === 'inyeccion' ? 'Inyección de capital' : 'Retiro de capital';
+      return `${type} por ${formatMoney(rec.amount)}`;
+    }
+    if (log.entity_type === 'payments') {
+      return `Se registró un pago de ${formatMoney(rec.amount)}`;
+    }
+    return `Se creó un registro de ${entity}`;
+  }
+
+  // ── UPDATE ──────────────────────────────────────────
+  if (log.action === 'UPDATE') {
+    if (log.entity_type === 'installments') {
+      const old = details.old ?? {};
+      const neu = details.new ?? {};
+      if (old.status !== neu.status) {
+        const statusLabel: Record<string, string> = {
+          paid: 'Pagada ✅',
+          pending: 'Pendiente',
+          overdue: 'En mora ⚠️',
+          partial: 'Pago parcial',
+        };
+        const installNum = neu.installment_number || old.installment_number || '?';
+        const from = statusLabel[old.status] || old.status || '?';
+        const to = statusLabel[neu.status] || neu.status || '?';
+        return `Cuota #${installNum} cambió de "${from}" a "${to}"`;
+      }
+      return `Se actualizó la cuota #${neu.installment_number || '?'}`;
+    }
+    if (log.entity_type === 'loans') {
+      const old = details.old ?? {};
+      const neu = details.new ?? {};
+      if (old.status !== neu.status && neu.status) {
+        const statusLabel: Record<string, string> = {
+          active: 'Activo',
+          paid: 'Pagado ✅',
+          overdue: 'En mora ⚠️',
+          cancelled: 'Cancelado',
+        };
+        return `Préstamo de ${formatMoney(neu.amount || old.amount)} cambió a "${statusLabel[neu.status] || neu.status}"`;
+      }
+      if (old.amount !== neu.amount) {
+        return `Préstamo editado: monto de ${formatMoney(old.amount)} a ${formatMoney(neu.amount)}`;
+      }
+      return `Se actualizó el préstamo de ${formatMoney(neu.amount || old.amount)}`;
+    }
+    if (log.entity_type === 'clients') {
+      const old = details.old ?? {};
+      const neu = details.new ?? {};
+      return `Se actualizó el cliente "${neu.full_name || old.full_name || '—'}"`;
+    }
+    if (log.entity_type === 'settings') {
+      const old = details.old ?? {};
+      const neu = details.new ?? {};
+      return `Configuración "${neu.key || old.key || '—'}": "${old.value ?? '—'}" → "${neu.value ?? '—'}"`;
+    }
+    return `Se actualizó un registro de ${entity}`;
+  }
+
+  // ── DELETE ──────────────────────────────────────────
+  if (log.action === 'DELETE') {
+    if (log.entity_type === 'clients') {
+      return `Se eliminó el cliente "${rec.full_name || rec.name || '—'}"`;
+    }
+    if (log.entity_type === 'loans') {
+      return `Se eliminó el préstamo de ${formatMoney(rec.amount)}`;
+    }
+    if (log.entity_type === 'installments') {
+      return `Se eliminó la cuota #${rec.installment_number || '?'} por ${formatMoney(rec.total_amount)}`;
+    }
+    if (log.entity_type === 'capital_transactions') {
+      return `Se eliminó el movimiento de capital de ${formatMoney(rec.amount)}`;
+    }
+    return `Se eliminó un registro de ${entity}`;
+  }
+
+  return entity;
+}
+
+/**
+ * Para cambios en UPDATE: muestra los campos que cambiaron de forma legible.
+ */
+const FIELD_LABELS: Record<string, string> = {
+  amount: 'Monto',
+  interest_rate: 'Tasa',
+  term_months: 'Plazo (meses)',
+  payment_frequency: 'Frecuencia',
+  rate_type: 'Tipo de tasa',
+  first_payment_date: 'Fecha primer pago',
+  start_date: 'Fecha desembolso',
+  status: 'Estado',
+  full_name: 'Nombre',
+  phone: 'Teléfono',
+  email: 'Correo',
+  address: 'Dirección',
+};
+
+function getChangedFields(log: AuditLog): { label: string; from: string; to: string }[] {
+  if (log.action !== 'UPDATE') return [];
+  const details = log.details as any;
+  if (!details?.old || !details?.new) return [];
+
+  const skipKeys = ['updated_at', 'created_at', 'user_id', 'id', 'owner_id', 'loan_id', 'client_id'];
+  const changes: { label: string; from: string; to: string }[] = [];
 
   for (const key of Object.keys(details.new)) {
     if (skipKeys.includes(key)) continue;
     if (JSON.stringify(details.old[key]) !== JSON.stringify(details.new[key])) {
-      changes.push(
-        `${key}: "${details.old[key] ?? "—"}" → "${details.new[key] ?? "—"}"`
-      );
+      const label = FIELD_LABELS[key] || key;
+      const from = details.old[key] != null ? String(details.old[key]) : '—';
+      const to = details.new[key] != null ? String(details.new[key]) : '—';
+      changes.push({ label, from, to });
     }
   }
-
-  return changes.length > 0 ? changes.slice(0, 3).join(" | ") : null;
+  return changes.slice(0, 4);
 }
+
 
 // ────────────────────────────────────────────
 // Page Component
@@ -160,7 +255,7 @@ export default function AuditoriaPage() {
     const q = search.toLowerCase();
     return (
       ENTITY_LABELS[log.entity_type]?.toLowerCase().includes(q) ||
-      getEntityName(log).toLowerCase().includes(q) ||
+      getActionSummary(log).toLowerCase().includes(q) ||
       (log.entity_id || "").toLowerCase().includes(q)
     );
   });
@@ -302,11 +397,11 @@ export default function AuditoriaPage() {
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-border/50">
+          <div className="divide-y divide-border/50">
               {filtered.map((log) => {
                 const cfg = ACTION_CONFIG[log.action];
-                const entityName = getEntityName(log);
-                const changeDesc = getChangeDescription(log);
+                const summary = getActionSummary(log);
+                const changedFields = getChangedFields(log);
                 let dateStr = "—";
                 try {
                   dateStr = format(parseISO(log.created_at), "dd MMM yyyy, HH:mm:ss", { locale: es });
@@ -315,7 +410,7 @@ export default function AuditoriaPage() {
                 return (
                   <div
                     key={log.id}
-                    className="flex items-start gap-4 py-3 hover:bg-muted/30 transition-colors rounded-lg px-2"
+                    className="flex items-start gap-4 py-3.5 hover:bg-muted/30 transition-colors rounded-lg px-2"
                   >
                     {/* Action Badge */}
                     <div className="pt-0.5 flex-shrink-0">
@@ -329,24 +424,30 @@ export default function AuditoriaPage() {
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-sm">
-                          {ENTITY_LABELS[log.entity_type] || log.entity_type}
-                        </span>
-                        {entityName && (
-                          <span className="text-sm text-muted-foreground truncate">
-                            — {entityName}
-                          </span>
-                        )}
-                      </div>
-                      {changeDesc && (
-                        <p className="text-xs text-muted-foreground mt-0.5 font-mono bg-muted/50 rounded px-2 py-0.5 truncate">
-                          {changeDesc}
-                        </p>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      {/* Descripción principal clara */}
+                      <p className="text-sm font-medium leading-snug">{summary}</p>
+
+                      {/* Chips de campos cambiados (solo en UPDATE) */}
+                      {changedFields.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                          {changedFields.map((ch, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-flex items-center gap-1 text-xs bg-muted rounded px-2 py-0.5 text-muted-foreground"
+                            >
+                              <span className="font-medium text-foreground">{ch.label}:</span>
+                              <span className="line-through opacity-60">{ch.from}</span>
+                              <span className="mx-0.5 opacity-40">→</span>
+                              <span className="text-blue-400 font-medium">{ch.to}</span>
+                            </span>
+                          ))}
+                        </div>
                       )}
+
+                      {/* Aviso de eliminación */}
                       {log.action === "DELETE" && (
-                        <p className="text-xs text-red-400/80 mt-0.5">
+                        <p className="text-xs text-red-400/80">
                           ⚠️ Este registro fue eliminado permanentemente.
                         </p>
                       )}
