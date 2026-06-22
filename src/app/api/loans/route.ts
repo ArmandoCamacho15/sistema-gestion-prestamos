@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { generateSchedule } from '@/lib/calculations/schedule';
+import { parseLocalDate, formatLocalYYYYMMDD } from '@/lib/formatters';
 
 export async function POST(request: Request) {
   try {
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
       termMonths,
       rateType,
       frequency: paymentFrequency,
-      firstPaymentDate: new Date(firstPaymentDate),
+      firstPaymentDate: parseLocalDate(firstPaymentDate),
     });
 
     const totalPaid = schedule.reduce((sum, inst) => sum + inst.totalAmount, 0);
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
     const installmentsData = schedule.map((inst) => ({
       loan_id: loan.id,
       installment_number: inst.installmentNumber,
-      due_date: inst.dueDate.toISOString().split('T')[0],
+      due_date: formatLocalYYYYMMDD(inst.dueDate),
       capital_amount: inst.capitalAmount,
       interest_amount: inst.interestAmount,
       total_amount: inst.totalAmount,

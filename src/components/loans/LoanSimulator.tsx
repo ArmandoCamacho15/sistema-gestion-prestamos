@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { generateSchedule, ScheduleInstallment } from '@/lib/calculations/schedule';
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatCurrency, formatDate, parseLocalDate } from '@/lib/formatters';
 import {
   Table,
   TableBody,
@@ -48,7 +48,7 @@ export function LoanSimulator({
     termMonths,
     rateType,
     frequency: paymentFrequency,
-    firstPaymentDate: new Date(firstPaymentDate),
+    firstPaymentDate: parseLocalDate(firstPaymentDate),
   });
 
   const totalPaid = schedule.reduce((sum, inst) => sum + inst.totalAmount, 0);
