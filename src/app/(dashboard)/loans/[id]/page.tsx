@@ -10,6 +10,7 @@ import {
   FileDown,
   Trash2,
   Loader2,
+  Pencil,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -117,6 +118,14 @@ export default function LoanDetailsPage() {
             {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
             {isExporting ? 'Generando...' : 'Exportar PDF'}
           </Button>
+          {paidCount === 0 && (
+            <Button variant="outline" asChild>
+              <Link href={`/loans/${id}/edit`}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Editar
+              </Link>
+            </Button>
+          )}
           <Button 
             variant="destructive" 
             onClick={handleDelete}
