@@ -67,16 +67,16 @@ export function GrowthProjectionCard({ summary, capitalSummary }: GrowthProjecti
       <CardContent>
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+            <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
               Rendimiento Cartera
               <Tooltip content={
-                <p className="w-[200px] text-xs">
+                <span className="block w-[200px] text-xs">
                   Rentabilidad esperada de los préstamos actualmente activos (Interés Esperado / Capital Prestado).
-                </p>
+                </span>
               }>
                 <Info className="h-3 w-3" />
               </Tooltip>
-            </p>
+            </div>
             <p className="text-2xl font-bold">{portfolioYieldPercentage.toFixed(1)}%</p>
           </div>
           

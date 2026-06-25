@@ -225,9 +225,9 @@ export function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
       {/* Simulador */}
       <div className="lg:col-span-7">
         <LoanSimulator 
-          amount={watchAll.amount}
-          interestRate={watchAll.interestRate}
-          termMonths={watchAll.termMonths}
+          amount={Number(watchAll.amount) || 0}
+          interestRate={Number(watchAll.interestRate) || 0}
+          termMonths={Number(watchAll.termMonths) || 1}
           rateType={watchAll.rateType}
           paymentFrequency={watchAll.paymentFrequency}
           firstPaymentDate={watchAll.firstPaymentDate}

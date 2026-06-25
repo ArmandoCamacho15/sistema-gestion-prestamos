@@ -40,6 +40,17 @@ export default async function EquipoPage() {
     console.error('Error cargando equipo:', error);
   }
 
+  // Combinar el dueño con la lista de miembros para que siempre aparezca en la tabla
+  const ownerMember = {
+    id: role === 'owner' ? user.id : ownerId,
+    email: role === 'owner' ? user.email : 'Dueño del equipo',
+    role: 'owner',
+    status: 'active',
+    created_at: null, // El dueño no tiene fecha de invitación
+  };
+
+  const allMembers = [ownerMember, ...(members || [])];
+
   return (
     <div className="space-y-6">
       <div>
@@ -74,7 +85,7 @@ export default async function EquipoPage() {
               <CardTitle>Miembros actuales</CardTitle>
             </CardHeader>
             <CardContent>
-              {members && members.length > 0 ? (
+              {allMembers.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left">
                     <thead className="text-xs text-muted-foreground uppercase bg-muted/50 rounded-t-lg">
@@ -86,13 +97,13 @@ export default async function EquipoPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {members.map((member) => (
+                      {allMembers.map((member) => (
                         <tr key={member.id} className="hover:bg-muted/50 transition-colors">
                           <td className="px-4 py-3 font-medium text-foreground">{member.email}</td>
-                          <td className="px-4 py-3 capitalize">{member.role}</td>
+                          <td className="px-4 py-3 capitalize">{member.role === 'owner' ? 'Dueño' : member.role}</td>
                           <td className="px-4 py-3">
                             <Badge variant={member.status === 'active' ? 'default' : member.status === 'pending' ? 'secondary' : 'destructive'}>
-                              {member.status}
+                              {member.status === 'active' ? 'Activo' : member.status}
                             </Badge>
                           </td>
                           <td className="px-4 py-3 text-muted-foreground">

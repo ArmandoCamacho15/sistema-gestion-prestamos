@@ -13,6 +13,7 @@ import {
   Landmark,
   ClipboardList,
   UserCheck,
+  BarChart,
 } from 'lucide-react';
 import { useTeamRole } from '@/providers/TeamRoleProvider';
 import { logout } from '@/lib/auth/actions';
@@ -29,6 +30,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Clientes', href: '/clients', icon: Users },
   { name: 'Préstamos', href: '/loans', icon: HandCoins },
+  { name: 'Reportes', href: '/reportes', icon: BarChart },
   { name: 'Equipo', href: '/equipo', icon: UserCheck },
   { name: 'Configuración', href: '/settings', icon: Settings },
   { name: 'Auditoría', href: '/auditoria', icon: ClipboardList },
@@ -45,7 +47,7 @@ export function Sidebar() {
       return !['Equipo', 'Configuración'].includes(item.name);
     }
     if (role === 'secretary') {
-      return !['Dashboard', 'Configuración', 'Auditoría', 'Equipo'].includes(item.name);
+      return !['Dashboard', 'Configuración', 'Auditoría', 'Equipo', 'Reportes'].includes(item.name);
     }
     if (role === 'collector') {
       return ['Préstamos', 'Clientes'].includes(item.name);
