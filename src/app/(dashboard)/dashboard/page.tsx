@@ -12,6 +12,7 @@ import { RecentActivityTable } from "@/components/dashboard/RecentActivityTable"
 import { ProjectedRevenueChart } from "@/components/dashboard/ProjectedRevenueChart";
 import { GrowthProjectionCard } from "@/components/dashboard/GrowthProjectionCard";
 import { CapitalManagerModal } from "@/components/dashboard/CapitalManagerModal";
+import { CapitalMovementsCard } from "@/components/dashboard/CapitalMovementsCard";
 import { LiquidityAlert } from "@/components/dashboard/LiquidityAlert";
 import { TopClientsTable } from "@/components/dashboard/TopClientsTable";
 import { LateLoansTable } from "@/components/dashboard/LateLoansTable";
@@ -113,9 +114,8 @@ export default function DashboardPage() {
       ? Number(monthlyCashflow[monthlyCashflow.length - 1]?.interest_received || 0) + Number(monthlyCashflow[monthlyCashflow.length - 1]?.late_interest_received || 0)
       : 0;
       
-  const gastosMes = interesesDelMesActual * ((settings?.operating_expenses ?? 20) / 100);
-  const provisionMes = interesesDelMesActual * ((settings?.provision_mora ?? 10) / 100);
-  const gananciasNetasMes = interesesDelMesActual - gastosMes - provisionMes;
+  const { totalInyeccionesMes, totalRetirosMes } = data.capitalMovements || { totalInyeccionesMes: 0, totalRetirosMes: 0 };
+  const gananciasNetasMes = interesesDelMesActual - totalRetirosMes;
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -148,7 +148,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-7">
         <KpiCard
           title="Capital Disponible"
           value={formatCurrency(Number(capitalSummary.capital_disponible))}
@@ -199,11 +199,12 @@ export default function DashboardPage() {
         />
         <NetProfitCard
           interesesBrutos={interesesDelMesActual}
-          porcentajeGastos={settings?.operating_expenses ?? 20}
-          porcentajeProvision={settings?.provision_mora ?? 10}
-          gastos={gastosMes}
-          provision={provisionMes}
-          gananciaNeta={gananciasNetasMes}
+          retirosReales={totalRetirosMes}
+          gananciaNetaReal={gananciasNetasMes}
+        />
+        <CapitalMovementsCard
+          inyeccionesMes={totalInyeccionesMes}
+          retirosMes={totalRetirosMes}
         />
         <KpiCard
           title="Retorno Esperado"

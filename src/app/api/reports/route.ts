@@ -26,79 +26,122 @@ export async function GET(request: NextRequest) {
       p_user_id: user.id,
     });
 
-    // 1. Préstamos originados en el rango (Capital Colocado)
-    const { data: loans, error: loansError } = await supabase
-      .from("loans")
-      .select("amount, status, rate_type, total_interest")
-      .eq("user_id", user.id)
-      .gte("start_date", startParam)
-      .lte("start_date", endParam);
+    // Ejecutar consultas en paralelo
+    const [
+      { data: loans, error: loansError },
+      { data: payments, error: paymentsError },
+      { data: installmentsData, error: installmentsError },
+      { data: lateInstallments, error: lateError },
+      { data: capitalTransactions, error: capitalError },
+    ] = await Promise.all([
+      // 1. Préstamos originados en el rango
+      supabase
+        .from("loans")
+        .select("amount, status, rate_type, total_interest")
+        .eq("user_id", user.id)
+        .gte("start_date", startParam)
+        .lte("start_date", endParam),
+
+      // 2. Pagos recibidos en el rango
+      supabase
+        .from("payments")
+        .select("amount, late_interest, payment_date")
+        .eq("user_id", user.id)
+        .gte("payment_date", startParam)
+        .lte("payment_date", endParam)
+        .order("payment_date", { ascending: true }),
+
+      // 3. Cuotas pagadas en el rango (para capital vs interés)
+      supabase
+        .from("installments")
+        .select("capital_amount, interest_amount, loans!inner(user_id)")
+        .eq("loans.user_id", user.id)
+        .eq("status", "paid")
+        .gte("paid_date", startParam)
+        .lte("paid_date", endParam),
+
+      // 4. Mora actual (foto del momento)
+      supabase
+        .from("v_late_installments")
+        .select("total_amount")
+        .eq("user_id", user.id),
+
+      // 5. Movimientos de capital en el rango
+      supabase
+        .from("capital_transactions")
+        .select("amount, type, date, notes")
+        .eq("user_id", user.id)
+        .gte("date", startParam)
+        .lte("date", endParam)
+        .order("date", { ascending: true }),
+    ]);
 
     if (loansError) throw loansError;
+    if (paymentsError) throw paymentsError;
+    if (installmentsError) throw installmentsError;
+    if (lateError) throw lateError;
+    if (capitalError) throw capitalError;
 
-    const capitalColocado = loans.reduce((acc, loan) => acc + Number(loan.amount), 0);
-    const totalInteresProyectado = loans.reduce((acc, loan) => acc + Number(loan.total_interest || 0), 0);
-    
+    // ── Cálculos préstamos ───────────────────────────────────────────────
+    const capitalColocado = (loans || []).reduce((acc, loan) => acc + Number(loan.amount), 0);
+    const totalInteresProyectado = (loans || []).reduce((acc, loan) => acc + Number(loan.total_interest || 0), 0);
+
     const loansDistribution = [
-      { name: "Activos", value: loans.filter(l => l.status === "activo").length },
-      { name: "Pagados", value: loans.filter(l => l.status === "pagado").length },
-      { name: "Morosos", value: loans.filter(l => l.status === "moroso").length },
+      { name: "Activos", value: (loans || []).filter(l => l.status === "activo").length },
+      { name: "Pagados", value: (loans || []).filter(l => l.status === "pagado").length },
+      { name: "Morosos", value: (loans || []).filter(l => l.status === "moroso").length },
     ].filter(d => d.value > 0);
 
-    // 2. Pagos recibidos en el rango (Flujo de Caja y Rendimiento)
-    const { data: payments, error: paymentsError } = await supabase
-      .from("payments")
-      .select("amount, late_interest, payment_date")
-      .eq("user_id", user.id)
-      .gte("payment_date", startParam)
-      .lte("payment_date", endParam)
-      .order("payment_date", { ascending: true });
+    // ── Cálculos pagos ───────────────────────────────────────────────────
+    const totalRecaudado = (payments || []).reduce((acc, p) => acc + Number(p.amount), 0);
+    const totalInteresMoraRecaudado = (payments || []).reduce((acc, p) => acc + Number(p.late_interest || 0), 0);
 
-    if (paymentsError) throw paymentsError;
-
-    const totalRecaudado = payments.reduce((acc, payment) => acc + Number(payment.amount), 0);
-    const totalInteresMoraRecaudado = payments.reduce((acc, payment) => acc + Number(payment.late_interest || 0), 0);
-
-    // Agrupar pagos por día o mes para el gráfico de flujo de caja
     const cashFlowMap = new Map<string, number>();
-    payments.forEach(payment => {
-      // Tomamos solo la parte de fecha, YYYY-MM-DD
-      const dateStr = payment.payment_date.split('T')[0]; 
-      const current = cashFlowMap.get(dateStr) || 0;
-      cashFlowMap.set(dateStr, current + Number(payment.amount));
+    (payments || []).forEach(payment => {
+      const dateStr = payment.payment_date.split('T')[0];
+      cashFlowMap.set(dateStr, (cashFlowMap.get(dateStr) || 0) + Number(payment.amount));
     });
-    
-    const cashFlowData = Array.from(cashFlowMap.entries()).map(([date, amount]) => ({
-      date,
-      amount
-    }));
 
-    // 3. Obtener cuotas para discriminar Capital vs Interés recuperado
-    // Como las cuotas no tienen user_id directamente, usamos una vista o inner join en frontend
-    // Para simplificar, haremos una consulta a installments con filter de paid_date, 
-    // pero como installments no tiene user_id, tenemos que usar la tabla préstamos
-    const { data: installmentsData, error: installmentsError } = await supabase
-      .from("installments")
-      .select("capital_amount, interest_amount, loans!inner(user_id)")
-      .eq("loans.user_id", user.id)
-      .eq("status", "paid")
-      .gte("paid_date", startParam)
-      .lte("paid_date", endParam);
+    // ── Capital vs interés recuperado ────────────────────────────────────
+    const capitalRecuperado = (installmentsData || []).reduce((acc, inst) => acc + Number(inst.capital_amount), 0);
+    const interesesRecuperados = (installmentsData || []).reduce((acc, inst) => acc + Number(inst.interest_amount), 0) + totalInteresMoraRecaudado;
 
-    if (installmentsError) throw installmentsError;
+    // ── Mora ─────────────────────────────────────────────────────────────
+    const indiceMora = (lateInstallments || []).reduce((acc, inst) => acc + Number(inst.total_amount), 0);
 
-    const capitalRecuperado = installmentsData.reduce((acc, inst) => acc + Number(inst.capital_amount), 0);
-    const interesesRecuperados = installmentsData.reduce((acc, inst) => acc + Number(inst.interest_amount), 0) + totalInteresMoraRecaudado;
+    // ── Movimientos de capital ───────────────────────────────────────────
+    const txList = capitalTransactions || [];
+    const totalInyecciones = txList
+      .filter(tx => tx.type === "inyeccion")
+      .reduce((acc, tx) => acc + Number(tx.amount), 0);
+    const totalRetiros = txList
+      .filter(tx => tx.type === "retiro")
+      .reduce((acc, tx) => acc + Number(tx.amount), 0);
 
-    // 4. Mora actual (foto del momento)
-    const { data: lateInstallments, error: lateError } = await supabase
-      .from("v_late_installments")
-      .select("total_amount")
-      .eq("user_id", user.id);
+    // Ganancia neta real = intereses cobrados − retiros registrados en el período
+    const gananciaNeta = interesesRecuperados - totalRetiros;
 
-    if (lateError) throw lateError;
+    // Construir mapa de retiros por día para el gráfico de flujo de caja
+    const retirosMap = new Map<string, number>();
+    txList
+      .filter(tx => tx.type === "retiro")
+      .forEach(tx => {
+        const dateStr = tx.date.split('T')[0];
+        retirosMap.set(dateStr, (retirosMap.get(dateStr) || 0) + Number(tx.amount));
+      });
 
-    const indiceMora = lateInstallments.reduce((acc, inst) => acc + Number(inst.total_amount), 0);
+    // Combinar recaudo y retiros en un solo array ordenado por fecha
+    const allDates = new Set([
+      ...Array.from(cashFlowMap.keys()),
+      ...Array.from(retirosMap.keys()),
+    ]);
+    const enrichedCashFlowData = Array.from(allDates)
+      .sort()
+      .map(date => ({
+        date,
+        amount: cashFlowMap.get(date) || 0,
+        retiro: retirosMap.get(date) || 0,
+      }));
 
     return NextResponse.json({
       summary: {
@@ -108,9 +151,13 @@ export async function GET(request: NextRequest) {
         totalRecaudado,
         totalInteresProyectado,
         indiceMora,
+        totalInyecciones,
+        totalRetiros,
+        gananciaNeta,
       },
       loansDistribution,
-      cashFlowData,
+      cashFlowData: enrichedCashFlowData,
+      capitalTransactions: txList,
     });
 
   } catch (error: any) {

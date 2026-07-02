@@ -8,6 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/formatters';
@@ -16,6 +17,7 @@ interface CashFlowChartProps {
   data: {
     date: string;
     amount: number;
+    retiro?: number;
   }[];
 }
 
@@ -32,15 +34,15 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
   return (
     <Card className="col-span-full xl:col-span-2 shadow-sm">
       <CardHeader>
-        <CardTitle>Flujo de Caja de Recaudación</CardTitle>
+        <CardTitle>Flujo de Caja: Ingresos vs Retiros</CardTitle>
         <CardDescription>
-          Ingresos generados por pagos durante el periodo seleccionado
+          Comparativa de recaudación y retiros de capital diarios
         </CardDescription>
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
           <div className="h-[300px] flex items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg">
-            No hay recaudación en este periodo
+            No hay movimientos en este periodo
           </div>
         ) : (
           <div className="h-[300px] w-full">
@@ -63,7 +65,10 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
                   className="text-xs" 
                 />
                 <Tooltip
-                  formatter={(value: any) => [formatCurrency(value), 'Recaudado']}
+                  formatter={(value: any, name: any) => [
+                    formatCurrency(Number(value)), 
+                    name === 'amount' ? 'Recaudado' : 'Retirado'
+                  ]}
                   labelClassName="text-foreground font-semibold"
                   contentStyle={{
                     backgroundColor: 'hsl(var(--background))',
@@ -72,12 +77,23 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
                     color: 'hsl(var(--foreground))',
                   }}
                 />
+                <Legend verticalAlign="top" height={36} />
                 <Line
                   type="monotone"
                   dataKey="amount"
+                  name="Ingresos"
                   stroke="hsl(var(--primary))"
                   strokeWidth={3}
                   dot={{ r: 4, fill: 'hsl(var(--primary))' }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="retiro"
+                  name="Retiros"
+                  stroke="#ef4444" // red-500
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#ef4444' }}
                   activeDot={{ r: 6 }}
                 />
               </LineChart>

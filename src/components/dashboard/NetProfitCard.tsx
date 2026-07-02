@@ -1,7 +1,6 @@
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -16,20 +15,14 @@ import { Button } from "@/components/ui/button";
 
 interface NetProfitCardProps {
   interesesBrutos: number;
-  porcentajeGastos: number;
-  porcentajeProvision: number;
-  gastos: number;
-  provision: number;
-  gananciaNeta: number;
+  retirosReales: number;
+  gananciaNetaReal: number;
 }
 
 export function NetProfitCard({
   interesesBrutos,
-  porcentajeGastos,
-  porcentajeProvision,
-  gastos,
-  provision,
-  gananciaNeta,
+  retirosReales,
+  gananciaNetaReal,
 }: NetProfitCardProps) {
   return (
     <Card className="border-green-400/20 bg-green-500/5 hover:shadow-md transition-all">
@@ -44,9 +37,9 @@ export function NetProfitCard({
           <PopoverContent className="w-80">
             <div className="grid gap-4">
               <div className="space-y-2">
-                <h4 className="font-medium leading-none text-green-600">Distribución de Intereses</h4>
+                <h4 className="font-medium leading-none text-green-600">Ganancia Real del Mes</h4>
                 <p className="text-sm text-muted-foreground">
-                  Desglose contable sugerido para el mes actual basado en tu Configuración.
+                  Se calcula restando los retiros de capital (gastos) a los intereses cobrados en el mes.
                 </p>
               </div>
               <div className="grid gap-2 text-sm">
@@ -54,28 +47,24 @@ export function NetProfitCard({
                   <span>Intereses Cobrados (Bruto):</span>
                   <span>{formatCurrency(interesesBrutos)}</span>
                 </div>
-                <div className="flex items-center justify-between text-muted-foreground">
-                  <span>Fondo Gastos Operativos ({porcentajeGastos}%):</span>
-                  <span className="text-red-400">-{formatCurrency(gastos)}</span>
-                </div>
                 <div className="flex items-center justify-between text-muted-foreground border-b pb-2">
-                  <span>Fondo Provisión Mora ({porcentajeProvision}%):</span>
-                  <span className="text-orange-400">-{formatCurrency(provision)}</span>
+                  <span>Retiros Registrados (Gastos):</span>
+                  <span className="text-red-400">-{formatCurrency(retirosReales)}</span>
                 </div>
                 <div className="flex items-center justify-between font-bold text-green-500">
                   <span>Utilidad Libre (Neta):</span>
-                  <span>{formatCurrency(gananciaNeta)}</span>
+                  <span>{formatCurrency(gananciaNetaReal)}</span>
                 </div>
               </div>
               <div className="text-xs text-muted-foreground bg-muted p-2 rounded-md">
-                <strong>Tip:</strong> Si sacas dinero del fondo de gastos para pagar costos reales de tu negocio, regístralo arriba en el botón <b>"Gestionar Capital" &gt; "Retiro"</b> para descontarlo del sistema.
+                <strong>Tip:</strong> Registra todos los gastos operativos o personales en <b>"Gestionar Capital" &gt; "Retiro"</b> para que se descuenten aquí automáticamente.
               </div>
             </div>
           </PopoverContent>
         </Popover>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{formatCurrency(gananciaNeta)}</div>
+        <div className="text-2xl font-bold">{formatCurrency(gananciaNetaReal)}</div>
         <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
           <Banknote className="h-3 w-3" />
           Haz clic en la [i] para ver el desglose

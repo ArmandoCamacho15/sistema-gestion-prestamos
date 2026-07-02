@@ -11,8 +11,11 @@ interface ReportData {
     totalRecaudado: number;
     totalInteresProyectado: number;
     indiceMora: number;
+    totalInyecciones: number;
+    totalRetiros: number;
+    gananciaNeta: number;
   };
-  cashFlowData: { date: string; amount: number }[];
+  cashFlowData: { date: string; amount: number; retiro?: number }[];
   loansDistribution: { name: string; value: number }[];
   startDate: string;
   endDate: string;
@@ -50,6 +53,7 @@ export async function generateFinancialReportPDF(data: ReportData) {
     ['Intereses Recaudados', formatCurrency(data.summary.interesesRecuperados)],
     ['Capital Recuperado', formatCurrency(data.summary.capitalRecuperado)],
     ['Total Recaudado', formatCurrency(data.summary.totalRecaudado)],
+    ['Ganancia Neta Real', formatCurrency(data.summary.gananciaNeta)],
     ['Índice de Mora', formatCurrency(data.summary.indiceMora)],
   ];
   
@@ -81,28 +85,51 @@ export async function generateFinancialReportPDF(data: ReportData) {
     headStyles: { fillColor: [226, 232, 240], textColor: [15, 23, 42] },
   });
 
-  // 3. Flujo de Caja
+  // 3. Movimientos de Capital
+  // @ts-ignore
+  currentY = (doc as any).lastAutoTable.finalY + 15;
+  
+  doc.setFontSize(14);
+  doc.text('3. Movimientos de Capital', 14, currentY);
+
+  const capitalBody = [
+    ['Inyecciones de Capital', formatCurrency(data.summary.totalInyecciones || 0)],
+    ['Retiros (Gastos)', formatCurrency(data.summary.totalRetiros || 0)],
+  ];
+  
+  // @ts-ignore
+  autoTable(doc, {
+    startY: currentY + 5,
+    head: [['Tipo de Movimiento', 'Monto']],
+    body: capitalBody,
+    theme: 'striped',
+    headStyles: { fillColor: [16, 185, 129] }, // emerald-500
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+  });
+
+  // 4. Flujo de Caja
   // @ts-ignore
   currentY = (doc as any).lastAutoTable.finalY + 15;
   
   // Verificar si hay espacio en la página, si no, crear nueva
-  if (currentY > 250) {
+  if (currentY > 230) {
     doc.addPage();
     currentY = 20;
   }
 
   doc.setFontSize(14);
-  doc.text('3. Desglose de Recaudación (Flujo de Caja)', 14, currentY);
+  doc.text('4. Desglose de Recaudación vs Retiros', 14, currentY);
   
   const cashFlowBody = data.cashFlowData.map(item => [
     format(new Date(item.date + 'T00:00:00'), 'dd/MM/yyyy'), 
-    formatCurrency(item.amount)
+    formatCurrency(item.amount),
+    formatCurrency(item.retiro || 0)
   ]);
   
   // @ts-ignore
   autoTable(doc, {
     startY: currentY + 5,
-    head: [['Fecha', 'Recaudado']],
+    head: [['Fecha', 'Recaudado', 'Retirado']],
     body: cashFlowBody,
     theme: 'grid',
     headStyles: { fillColor: [59, 130, 246] }, // blue-500
