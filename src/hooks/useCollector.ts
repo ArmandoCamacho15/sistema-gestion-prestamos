@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { formatLocalYYYYMMDD } from '@/lib/formatters';
 
 /**
  * Obtiene los préstamos asignados al cobrador autenticado.
@@ -53,7 +54,7 @@ export function useCollectorDailySummary() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No autenticado');
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = formatLocalYYYYMMDD(new Date());
 
       // Cuotas pendientes en los préstamos asignados
       const { data: assignments } = await supabase

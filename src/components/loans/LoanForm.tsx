@@ -3,6 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loanSchema, LoanValues } from '@/lib/validations/loanSchema';
+import { formatLocalYYYYMMDD } from '@/lib/formatters';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -43,7 +44,7 @@ export function LoanForm({ onSubmit, isLoading }: LoanFormProps) {
       interestRate: 0,
       rateType: 'flat',
       paymentFrequency: 'mensual',
-      startDate: new Date().toISOString().split('T')[0],
+      startDate: formatLocalYYYYMMDD(new Date()),
       firstPaymentDate: '',
     },
   });

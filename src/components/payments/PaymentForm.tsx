@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { paymentSchema } from '@/lib/validations/paymentSchema';
 import { useRegisterPayment } from '@/hooks/usePayments';
-import { formatCurrency, formatDate, formatLocalYYYYMMDD } from '@/lib/formatters';
+import { formatCurrency, formatDate, formatLocalYYYYMMDD, parseLocalDate } from '@/lib/formatters';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -38,9 +38,11 @@ export function PaymentForm({ installment, loanId }: PaymentFormProps) {
   const router = useRouter();
   const registerPayment = useRegisterPayment();
 
-  const today = new Date();
-  const dueDate = new Date(installment.due_date);
-  const daysLate = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+  const now = new Date();
+  // Construir fechas usando hora local para evitar desfase de zona horaria
+  const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dueDate = parseLocalDate(installment.due_date);
+  const daysLate = Math.floor((todayLocal.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
   const isLate = daysLate > 0;
 
   const form = useForm({
