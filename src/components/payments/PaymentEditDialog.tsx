@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { editPaymentSchema } from '@/lib/validations/paymentSchema';
 import { useUpdatePayment, useDeletePayment } from '@/hooks/usePayments';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatLocalYYYYMMDD } from '@/lib/formatters';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -40,7 +40,7 @@ export function PaymentEditDialog({ open, onClose, payment }: PaymentEditDialogP
     resolver: zodResolver(editPaymentSchema),
     defaultValues: {
       amount: payment.amount,
-      paid_date: payment.payment_date?.split('T')[0] || payment.payment_date || new Date().toISOString().split('T')[0],
+      paid_date: payment.payment_date?.split('T')[0] || payment.payment_date || formatLocalYYYYMMDD(new Date()),
       late_interest: payment.late_interest ?? 0,
       notes: payment.notes || '',
     },

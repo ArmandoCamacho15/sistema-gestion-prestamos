@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { paymentSchema } from '@/lib/validations/paymentSchema';
 import { useRegisterPayment } from '@/hooks/usePayments';
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatCurrency, formatDate, formatLocalYYYYMMDD } from '@/lib/formatters';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -49,7 +49,7 @@ export function PaymentForm({ installment, loanId }: PaymentFormProps) {
       installment_id: installment.id,
       loan_id: loanId,
       amount: installment.total_amount,
-      paid_date: new Date().toISOString(),
+      paid_date: formatLocalYYYYMMDD(new Date()),
       late_interest: 0,
       notes: '',
     },
