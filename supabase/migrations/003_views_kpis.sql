@@ -38,8 +38,22 @@ select
   l.user_id,
   date_trunc('month', p.payment_date) as month,
   coalesce(sum(p.amount), 0) as total_received,
+  coalesce(sum(
+    CASE 
+      WHEN i.total_amount > 0 THEN p.amount * (i.capital_amount / i.total_amount)
+      ELSE 0
+    END
+  ), 0) as capital_received,
+  coalesce(sum(
+    CASE 
+      WHEN i.total_amount > 0 THEN p.amount * (i.interest_amount / i.total_amount)
+      ELSE 0
+    END
+  ), 0) as interest_received,
+  coalesce(sum(p.late_interest), 0) as late_interest_received,
   count(*) as payment_count
 from payments p
 join loans l on p.loan_id = l.id
+join installments i on p.installment_id = i.id
 group by l.user_id, date_trunc('month', p.payment_date)
 order by month desc;
