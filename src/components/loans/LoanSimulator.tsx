@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { generateSchedule, ScheduleInstallment } from '@/lib/calculations/schedule';
-import { formatCurrency, formatDate, parseLocalDate } from '@/lib/formatters';
+import { formatCurrency, formatDate, parseLocalDate, formatLocalYYYYMMDD } from '@/lib/formatters';
 import {
   Table,
   TableBody,
@@ -117,7 +117,7 @@ export function LoanSimulator({
                 {schedule.map((inst) => (
                   <TableRow key={inst.installmentNumber}>
                     <TableCell className="text-center font-medium">{inst.installmentNumber}</TableCell>
-                    <TableCell>{formatDate(inst.dueDate.toISOString())}</TableCell>
+                    <TableCell>{formatDate(formatLocalYYYYMMDD(inst.dueDate))}</TableCell>
                     <TableCell className="text-right">{formatCurrency(inst.capitalAmount)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(inst.interestAmount)}</TableCell>
                     <TableCell className="text-right font-bold text-primary">{formatCurrency(inst.totalAmount)}</TableCell>

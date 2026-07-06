@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader2, PlusCircle } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatLocalYYYYMMDD } from "@/lib/formatters";
 
 const capitalSchema = z.object({
   amount: z.coerce.number().min(1, "El monto debe ser mayor a 0"),
@@ -53,7 +53,7 @@ export function CapitalManagerModal() {
     defaultValues: {
       amount: 0,
       type: "inyeccion" as "inyeccion" | "retiro",
-      date: new Date().toISOString().split("T")[0],
+      date: formatLocalYYYYMMDD(new Date()),
       notes: "",
     },
   });

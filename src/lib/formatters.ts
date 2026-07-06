@@ -22,10 +22,11 @@ export function formatDate(date: Date | string): string {
 
   if (typeof date === 'string') {
     const s = date.trim();
-    // If string is YYYY-MM-DD, construct local Date to avoid timezone shifts
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-      const [y, m, d] = s.split('-').map(Number);
-      return formatter.format(new Date(y, m - 1, d));
+    // Extraer la parte de la fecha YYYY-MM-DD independientemente de si tiene hora o zona horaria
+    const match = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const [_, y, m, d] = match;
+      return formatter.format(new Date(Number(y), Number(m) - 1, Number(d)));
     }
     const dObj = new Date(s);
     return formatter.format(dObj);

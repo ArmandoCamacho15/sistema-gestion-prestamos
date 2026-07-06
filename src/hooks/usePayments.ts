@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { formatLocalYYYYMMDD } from '@/lib/formatters';
 
 type AnyPayment = Record<string, any>;
 
@@ -8,7 +9,7 @@ function normalizeForApi(values: AnyPayment) {
   const installmentId = values.installment_id || values.installmentId || values.installmentId;
   const loanId = values.loan_id || values.loanId || values.loanId;
   const amount = values.amount;
-  const paymentDate = values.paid_date || values.paymentDate || values.payment_date || new Date().toISOString();
+  const paymentDate = values.paid_date || values.paymentDate || values.payment_date || formatLocalYYYYMMDD(new Date());
   const lateInterest = values.late_interest ?? values.lateInterest ?? 0;
   const notes = values.notes ?? null;
 
