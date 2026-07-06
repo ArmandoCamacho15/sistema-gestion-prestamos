@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { paymentSchema } from '@/lib/validations/paymentSchema';
 import { useRegisterPayment } from '@/hooks/usePayments';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatLocalYYYYMMDD } from '@/lib/formatters';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -48,7 +48,7 @@ export function PaymentDialog({ open, onClose, installment, loanId }: PaymentDia
       installment_id: installment.id,
       loan_id: loanId,
       amount: installment.total_amount,
-      paid_date: new Date().toISOString().split('T')[0],
+      paid_date: formatLocalYYYYMMDD(new Date()),
       notes: '',
       late_interest: 0,
     },
