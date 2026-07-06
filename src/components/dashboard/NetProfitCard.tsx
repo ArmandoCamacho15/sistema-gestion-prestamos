@@ -64,7 +64,7 @@ export function NetProfitCard({
         </Popover>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{formatCurrency(gananciaNetaReal)}</div>
+        <div className="text-xl sm:text-2xl font-bold truncate">{formatCurrency(gananciaNetaReal)}</div>
         <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
           <Banknote className="h-3 w-3" />
           Haz clic en la [i] para ver el desglose

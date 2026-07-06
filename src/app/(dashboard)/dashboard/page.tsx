@@ -151,7 +151,7 @@ export default function DashboardPage() {
       {/* Fila KPI A: Estado General del Capital */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Estado General del Capital</p>
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <KpiCard
             title="Capital Disponible"
             value={formatCurrency(Number(capitalSummary.capital_disponible))}
