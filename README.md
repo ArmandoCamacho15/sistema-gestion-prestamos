@@ -2,7 +2,7 @@
 
 Una aplicación web completa para la gestión de préstamos personales, construida con Next.js 15, Supabase y shadcn/ui. Diseñada para prestamistas independientes que necesitan llevar un control profesional de su cartera de clientes y préstamos.
 
-**🌍 URL de Producción:** [https://prestamos-app.vercel.app](https://prestamos-app.vercel.app)
+**🌍 URL de Producción:** [https://sistema-gestion-prestamos-smoky.vercel.app](https://sistema-gestion-prestamos-smoky.vercel.app)
 
 ## ✨ Características Principales
 
