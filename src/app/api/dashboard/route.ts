@@ -41,6 +41,12 @@ export async function GET(request: NextRequest) {
       cashflowQuery = cashflowQuery.limit(6); // Default 6 months for 'all'
     }
 
+    // Date format for the first day of the current month (local time)
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const firstDayOfMonthStr = `${yyyy}-${mm}-01`;
+
     // Ejecutar consultas en paralelo para mayor rapidez
     const [
       { data: summary, error: summaryError },
@@ -51,6 +57,7 @@ export async function GET(request: NextRequest) {
       { data: projectedCashflow, error: projectedError },
       { data: settingsData, error: settingsError },
       { data: topClients, error: topClientsError },
+      { data: capitalTransactions, error: txError },
     ] = await Promise.all([
       supabase.from("v_loan_summary").select("*").eq("user_id", user.id).single(),
       supabase
@@ -74,6 +81,11 @@ export async function GET(request: NextRequest) {
         .limit(6),
       supabase.from("settings").select("*").eq("user_id", user.id),
       supabase.rpc("get_top_debt_clients", { p_user_id: user.id }),
+      supabase
+        .from("capital_transactions")
+        .select("*")
+        .eq("user_id", user.id)
+        .gte("date", firstDayOfMonthStr),
     ]);
 
     // Parse Settings
@@ -122,6 +134,15 @@ export async function GET(request: NextRequest) {
     // Sort chronologically
     paddedProjectedCashflow.sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
 
+    // Procesar transacciones de capital del mes actual
+    const txList = capitalTransactions || [];
+    const totalInyeccionesMes = txList
+      .filter((tx) => tx.type === "inyeccion")
+      .reduce((sum, tx) => sum + Number(tx.amount), 0);
+    const totalRetirosMes = txList
+      .filter((tx) => tx.type === "retiro")
+      .reduce((sum, tx) => sum + Number(tx.amount), 0);
+
     return NextResponse.json({
       summary: summary || {
         active_loans: 0,
@@ -145,6 +166,11 @@ export async function GET(request: NextRequest) {
       projectedCashflow: paddedProjectedCashflow,
       topClients: topClients || [],
       settings,
+      capitalMovements: {
+        totalInyeccionesMes,
+        totalRetirosMes,
+        movimientosMes: txList,
+      },
     });
   } catch (error: any) {
     console.error("Error en dashboard API:", error);

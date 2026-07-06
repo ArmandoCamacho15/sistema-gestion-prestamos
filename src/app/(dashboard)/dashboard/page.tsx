@@ -12,6 +12,7 @@ import { RecentActivityTable } from "@/components/dashboard/RecentActivityTable"
 import { ProjectedRevenueChart } from "@/components/dashboard/ProjectedRevenueChart";
 import { GrowthProjectionCard } from "@/components/dashboard/GrowthProjectionCard";
 import { CapitalManagerModal } from "@/components/dashboard/CapitalManagerModal";
+import { CapitalMovementsCard } from "@/components/dashboard/CapitalMovementsCard";
 import { LiquidityAlert } from "@/components/dashboard/LiquidityAlert";
 import { TopClientsTable } from "@/components/dashboard/TopClientsTable";
 import { LateLoansTable } from "@/components/dashboard/LateLoansTable";
@@ -113,9 +114,8 @@ export default function DashboardPage() {
       ? Number(monthlyCashflow[monthlyCashflow.length - 1]?.interest_received || 0) + Number(monthlyCashflow[monthlyCashflow.length - 1]?.late_interest_received || 0)
       : 0;
       
-  const gastosMes = interesesDelMesActual * ((settings?.operating_expenses ?? 20) / 100);
-  const provisionMes = interesesDelMesActual * ((settings?.provision_mora ?? 10) / 100);
-  const gananciasNetasMes = interesesDelMesActual - gastosMes - provisionMes;
+  const { totalInyeccionesMes, totalRetirosMes } = data.capitalMovements || { totalInyeccionesMes: 0, totalRetirosMes: 0 };
+  const gananciasNetasMes = interesesDelMesActual - totalRetirosMes;
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -148,95 +148,108 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-        <KpiCard
-          title="Capital Disponible"
-          value={formatCurrency(Number(capitalSummary.capital_disponible))}
-          description="Liquidez para nuevos préstamos"
-          className="border-primary/20 bg-card hover:shadow-md transition-all shadow-sm"
-          infoNode={
-            <div className="space-y-2">
-              <h4 className="font-medium text-primary">¿De dónde sale?</h4>
-              <p className="text-muted-foreground">
-                Es la suma de todas tus <b>Inyecciones de Capital</b>, restando los <b>Retiros</b> y restando el <b>Capital prestado que aún no vuelve</b>.
-              </p>
-              <p className="text-xs mt-2 bg-muted p-2 rounded">
-                <b>Fórmula:</b> (Inyecciones - Retiros) - Capital en la calle + Capital ya cobrado en cuotas.
-              </p>
-            </div>
-          }
-        />
-        <KpiCard
-          title="Capital en la Calle"
-          value={formatCurrency(Number(capitalSummary.capital_en_calle))}
-          description="Saldo de capital prestado"
-          className="border-orange-500/20 bg-card hover:shadow-md transition-all"
-          infoNode={
-            <div className="space-y-2">
-              <h4 className="font-medium text-orange-500">¿Qué significa?</h4>
-              <p className="text-muted-foreground">
-                Es el <b>capital neto (sin intereses)</b> que tus clientes tienen en este momento. Este dinero volverá a ti poco a poco con el pago de cada cuota.
-              </p>
-            </div>
-          }
-        />
-        <KpiCard
-          title="Intereses Ganados"
-          value={formatCurrency(Number(capitalSummary.total_recuperado_intereses))}
-          description="Ganancia total obtenida"
-          className="border-emerald-500/20 bg-card hover:shadow-md transition-all"
-          infoNode={
-            <div className="space-y-2">
-              <h4 className="font-medium text-emerald-500">¿Qué incluye?</h4>
-              <p className="text-muted-foreground">
-                Es la suma total de la parte de <b>interés</b> y los <b>intereses por mora</b> de todas las cuotas que ya han sido <b>pagadas</b>.
-              </p>
-              <p className="text-xs mt-2 bg-muted p-2 rounded">
-                Este valor es bruto histórico, no descuenta gastos operativos.
-              </p>
-            </div>
-          }
-        />
-        <NetProfitCard
-          interesesBrutos={interesesDelMesActual}
-          porcentajeGastos={settings?.operating_expenses ?? 20}
-          porcentajeProvision={settings?.provision_mora ?? 10}
-          gastos={gastosMes}
-          provision={provisionMes}
-          gananciaNeta={gananciasNetasMes}
-        />
-        <KpiCard
-          title="Retorno Esperado"
-          value={formatCurrency(Number(capitalSummary.interes_esperado))}
-          description="Intereses por cobrar"
-          className="border-blue-400/20 bg-card hover:shadow-md transition-all"
-          infoNode={
-            <div className="space-y-2">
-              <h4 className="font-medium text-blue-400">Proyección</h4>
-              <p className="text-muted-foreground">
-                Son todos los <b>intereses que aún faltan por cobrar</b> de los préstamos activos y morosos. Es la ganancia futura asegurada si todos pagan.
-              </p>
-            </div>
-          }
-        />
-        <KpiCard
-          title="Cartera en Riesgo"
-          value={`${tasaMorosidad.toFixed(1)}%`}
-          description={`${prestamosMorosos} préstamos en mora`}
-          className={`bg-card hover:shadow-md transition-all ${tasaMorosidad > 10 ? "border-red-500/50" : "border-primary/10"}`}
-          infoNode={
-            <div className="space-y-2">
-              <h4 className="font-medium text-red-500">Nivel de Riesgo</h4>
-              <p className="text-muted-foreground">
-                Porcentaje de tus préstamos que están clasificados como morosos (superaron los días de gracia permitidos).
-              </p>
-              <p className="text-xs mt-2 bg-muted p-2 rounded">
-                <b>Fórmula:</b> Préstamos morosos / Total de préstamos activos y morosos.
-              </p>
-            </div>
-          }
-        />
+      {/* Fila KPI A: Estado General del Capital */}
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Estado General del Capital</p>
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
+          <KpiCard
+            title="Capital Disponible"
+            value={formatCurrency(Number(capitalSummary.capital_disponible))}
+            description="Liquidez para nuevos préstamos"
+            className="border-primary/20 bg-card hover:shadow-md transition-all shadow-sm"
+            infoNode={
+              <div className="space-y-2">
+                <h4 className="font-medium text-primary">¿De dónde sale?</h4>
+                <p className="text-muted-foreground">
+                  Es la suma de todas tus <b>Inyecciones de Capital</b>, restando los <b>Retiros</b> y restando el <b>Capital prestado que aún no vuelve</b>.
+                </p>
+                <p className="text-xs mt-2 bg-muted p-2 rounded">
+                  <b>Fórmula:</b> (Inyecciones - Retiros) - Capital en la calle + Capital ya cobrado en cuotas.
+                </p>
+              </div>
+            }
+          />
+          <KpiCard
+            title="Capital en la Calle"
+            value={formatCurrency(Number(capitalSummary.capital_en_calle))}
+            description="Saldo de capital prestado"
+            className="border-orange-500/20 bg-card hover:shadow-md transition-all"
+            infoNode={
+              <div className="space-y-2">
+                <h4 className="font-medium text-orange-500">¿Qué significa?</h4>
+                <p className="text-muted-foreground">
+                  Es el <b>capital neto (sin intereses)</b> que tus clientes tienen en este momento. Este dinero volverá a ti poco a poco con el pago de cada cuota.
+                </p>
+              </div>
+            }
+          />
+          <KpiCard
+            title="Intereses Ganados"
+            value={formatCurrency(Number(capitalSummary.total_recuperado_intereses))}
+            description="Ganancia total histórica"
+            className="border-emerald-500/20 bg-card hover:shadow-md transition-all"
+            infoNode={
+              <div className="space-y-2">
+                <h4 className="font-medium text-emerald-500">¿Qué incluye?</h4>
+                <p className="text-muted-foreground">
+                  Es la suma total de la parte de <b>interés</b> y los <b>intereses por mora</b> de todas las cuotas que ya han sido <b>pagadas</b>.
+                </p>
+                <p className="text-xs mt-2 bg-muted p-2 rounded">
+                  Este valor es bruto histórico, no descuenta gastos operativos.
+                </p>
+              </div>
+            }
+          />
+          <KpiCard
+            title="Retorno Esperado"
+            value={formatCurrency(Number(capitalSummary.interes_esperado))}
+            description="Intereses por cobrar"
+            className="border-blue-400/20 bg-card hover:shadow-md transition-all"
+            infoNode={
+              <div className="space-y-2">
+                <h4 className="font-medium text-blue-400">Proyección</h4>
+                <p className="text-muted-foreground">
+                  Son todos los <b>intereses que aún faltan por cobrar</b> de los préstamos activos y morosos. Es la ganancia futura asegurada si todos pagan.
+                </p>
+              </div>
+            }
+          />
+        </div>
       </div>
+
+      {/* Fila KPI B: Rendimiento del Mes y Riesgo */}
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Rendimiento del Mes y Riesgo</p>
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+          <NetProfitCard
+            interesesBrutos={interesesDelMesActual}
+            retirosReales={totalRetirosMes}
+            gananciaNetaReal={gananciasNetasMes}
+          />
+          <CapitalMovementsCard
+            inyeccionesMes={totalInyeccionesMes}
+            retirosMes={totalRetirosMes}
+          />
+          <KpiCard
+            title="Cartera en Riesgo"
+            value={`${tasaMorosidad.toFixed(1)}%`}
+            description={`${prestamosMorosos} préstamos en mora`}
+            className={`bg-card hover:shadow-md transition-all ${tasaMorosidad > 10 ? "border-red-500/50" : "border-primary/10"}`}
+            infoNode={
+              <div className="space-y-2">
+                <h4 className="font-medium text-red-500">Nivel de Riesgo</h4>
+                <p className="text-muted-foreground">
+                  Porcentaje de tus préstamos que están clasificados como morosos (superaron los días de gracia permitidos).
+                </p>
+                <p className="text-xs mt-2 bg-muted p-2 rounded">
+                  <b>Fórmula:</b> Préstamos morosos / Total de préstamos activos y morosos.
+                </p>
+              </div>
+            }
+          />
+        </div>
+      </div>
+
 
       {/* Fila 2: Proyecciones */}
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">

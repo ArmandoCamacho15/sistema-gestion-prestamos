@@ -69,6 +69,16 @@ export interface Settings {
   min_liquidity_percent: number;
 }
 
+export interface CapitalTransaction {
+  id: string;
+  user_id: string;
+  amount: number;
+  type: "inyeccion" | "retiro";
+  date: string;
+  notes?: string;
+  created_at: string;
+}
+
 export interface DashboardData {
   summary: DashboardSummary;
   upcomingInstallments: UpcomingInstallment[];
@@ -78,6 +88,11 @@ export interface DashboardData {
   capitalSummary: PortfolioSummary;
   topClients: TopClient[];
   settings: Settings;
+  capitalMovements: {
+    totalInyeccionesMes: number;
+    totalRetirosMes: number;
+    movimientosMes: CapitalTransaction[];
+  };
 }
 
 async function fetchDashboardData(period: string): Promise<DashboardData> {

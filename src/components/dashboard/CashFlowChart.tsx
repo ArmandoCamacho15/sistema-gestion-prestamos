@@ -21,9 +21,16 @@ interface CashFlowChartProps {
 
 export function CashFlowChart({ data }: CashFlowChartProps) {
   const chartData = data.map((item) => {
-    // Convert 'YYYY-MM-DD...' to a date object safely
+    // The DB returns dates like "2026-06-01T00:00:00+00:00".
+    // If we parse this in a local timezone (like UTC-5), it becomes May 31, 2026.
+    // To fix this, we force the formatter to use UTC timezone.
     const date = new Date(item.month);
-    const monthStr = new Intl.DateTimeFormat("es-ES", { month: "short", year: "numeric" }).format(date);
+    const monthStr = new Intl.DateTimeFormat("es-ES", { 
+      month: "short", 
+      year: "numeric",
+      timeZone: "UTC" 
+    }).format(date);
+    
     return {
       monthStr,
       value: Number(item.total_received),

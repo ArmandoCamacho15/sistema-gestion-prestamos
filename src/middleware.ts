@@ -18,7 +18,13 @@ function isAuthRoute(pathname: string) {
 }
 
 export async function middleware(request: NextRequest) {
-  const { response, user, cloneCookies } = await updateSession(request);
+  let sessionResult: any = { response: NextResponse.next({ request }), user: null, cloneCookies: (r: any) => r };
+  try {
+    sessionResult = await updateSession(request);
+  } catch (error) {
+    console.error('Middleware updateSession error:', error);
+  }
+  const { response, user, cloneCookies } = sessionResult;
   const { pathname } = request.nextUrl;
 
   // Las rutas de invitación son siempre públicas
