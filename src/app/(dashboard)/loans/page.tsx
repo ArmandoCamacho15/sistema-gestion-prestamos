@@ -1,15 +1,55 @@
 'use client';
 
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, FileText } from 'lucide-react';
+import { Plus, FileText, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { useLoans } from '@/hooks/useLoans';
 import { LoanList } from '@/components/loans/LoanList';
 import { useTeamRole } from '@/providers/TeamRoleProvider';
 import { CollectorView } from '@/components/team/CollectorView';
 
-export default function LoansPage() {
+// ErrorBoundary para capturar errores de renderizado de React en cliente
+class LoansErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; errorMessage: string }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, errorMessage: '' };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, errorMessage: error.message };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error('[LoansPage] Error capturado por ErrorBoundary:', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10">
+            <AlertTriangle className="h-8 w-8 text-destructive" />
+          </div>
+          <h2 className="text-xl font-semibold">Error al cargar préstamos</h2>
+          <p className="text-sm text-muted-foreground text-center max-w-sm">
+            Ocurrió un error al cargar el módulo. Intenta recargar la página.
+          </p>
+          <Button onClick={() => window.location.reload()}>
+            Recargar página
+          </Button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function LoansPageContent() {
   const { data: loans, isLoading } = useLoans();
   const { role } = useTeamRole();
 
@@ -73,5 +113,13 @@ export default function LoansPage() {
         </Card>
       )}
     </div>
+  );
+}
+
+export default function LoansPage() {
+  return (
+    <LoansErrorBoundary>
+      <LoansPageContent />
+    </LoansErrorBoundary>
   );
 }
