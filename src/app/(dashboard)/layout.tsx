@@ -16,12 +16,31 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
-  // Obtener rol del equipo
-  const { data: contextData } = await supabase.rpc('get_user_context');
-  
-  const userContext = contextData && contextData.length > 0 
-    ? { role: contextData[0].role, ownerId: contextData[0].owner_id }
-    : { role: 'owner' as const, ownerId: user.id };
+  // Obtener rol del equipo de forma defensiva
+  // Si la función RPC no existe en producción o lanza error, usamos fallback seguro
+  let userContext: {
+    role: 'owner' | 'collector' | 'secretary' | 'supervisor';
+    ownerId: string;
+  };
+
+  try {
+    const { data: contextData, error: rpcError } = await supabase.rpc('get_user_context');
+
+    if (rpcError) {
+      console.error('[DashboardLayout] Error en RPC get_user_context:', rpcError.message);
+    }
+
+    userContext =
+      contextData && contextData.length > 0
+        ? {
+            role: contextData[0].role as 'owner' | 'collector' | 'secretary' | 'supervisor',
+            ownerId: contextData[0].owner_id,
+          }
+        : { role: 'owner' as const, ownerId: user.id };
+  } catch (err) {
+    console.error('[DashboardLayout] Error inesperado obteniendo contexto de usuario:', err);
+    userContext = { role: 'owner' as const, ownerId: user.id };
+  }
 
   return (
     <TeamRoleProvider userContext={userContext}>
